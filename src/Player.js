@@ -1,9 +1,9 @@
 import Camera from './Camera.js';
 
 function Player(){
-    return (
-        <Camera />
-    );
+    const player = {};
+
+    return player;
 }
 
 export default Player;
