@@ -1,25 +1,42 @@
 import logo from './logo.svg';
 import './App.css';
+import React, { useEffect, useState } from 'react';
+import { Button } from 'react-bootstrap';
+import Form  from 'react-bootstrap/Form';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+  function simulateNetworkRequest() {
+    return new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  
+  function App() {
+    const [isLoading, setLoading] = useState(false);
+  
+    useEffect(() => {
+      if (isLoading) {
+        simulateNetworkRequest().then(() => {
+          setLoading(false);
+        });
+      }
+    }, [isLoading]);
+  
+    /*isActive = "disabled";*/
+
+    const handleClick = () => setLoading(true);
+
+    return (
+      <div className = "Forms">
+        <Form>
+          <Form.Group controlId="formBasicUsername">
+            <Form.Control type="Username" placeholder="Username" />
+          </Form.Group>
+
+          <Button variant="primary" size="lg" disabled={isLoading} onClick={!isLoading ? handleClick : null} /*{isActive}*/>
+            {isLoading ? 'Loading…' : 'Rejoindre une partie'}
+          </Button>
+        </Form>
+      </div>
+    );
+  }
 
 export default App;
+
