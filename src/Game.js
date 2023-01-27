@@ -8,43 +8,35 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 
 function Game(){
 
-    const scene = new Scene();
     const camera = new Camera();
+    const player = new Player({camera: camera});
+    const scene = new Scene();
     const renderer = new Renderer();
 
-    const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-    const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-    const cube = new THREE.Mesh( geometry, material );
-    // scene.add( cube );
+    const board = new THREE.Group();
 
-    let model;
-    const loader = new OBJLoader();
-    const Dmodel = loader.load( 'http://localhost:8000/models/cruiser.obj', function ( object ) {
-        model = object;
-        model.traverse( function ( child ) {
-            if ( child.isMesh ) {
-                child.material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-            }
-        } );
-        return model;
-    }, undefined, function ( error ) {
-        console.error( error );
-    } );
+    for (let i = 0; i < 10; i++) {
+        for (let j = 0; j < 10; j++) {
+            const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+            const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+            const cube = new THREE.Mesh( geometry, material );
+            cube.position.x = i;
+            cube.position.y = j;
+            board.add(cube);
+        }
+    }
 
-    scene.add( Dmodel );
+    scene.add(board);
 
 
-    console.log(scene.children);
-    camera.position.z = 5;
-
-
-
+    player.movementFunction();
 
     function animate() {
         requestAnimationFrame( animate );
 
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
+        board.rotation.x += 0.01;
+        board.rotation.y += 0.01;
+
 
         renderer.render( scene, camera );
     };
