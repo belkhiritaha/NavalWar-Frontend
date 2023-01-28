@@ -5,6 +5,7 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 import {OBJLoader} from "three/examples/jsm/loaders/OBJLoader";
 
 import App from "./App";
+import Crosshair from "./Crosshair";
 
 class Container extends React.Component {
     state = {isMounted: true};
@@ -13,12 +14,8 @@ class Container extends React.Component {
         const {isMounted = true, loadingPercentage = 0} = this.state;
         return (
             <>
-                <button onClick={() => this.setState(state => ({isMounted: !state.isMounted}))}>
-                    {isMounted ? "Unmount" : "Mount"}
-                </button>
+                <Crosshair />
                 {isMounted && <App onProgress={loadingPercentage => this.setState({ loadingPercentage })} />}
-                {isMounted && loadingPercentage === 100 && <div>Scroll to zoom, drag to rotate</div>}
-                {isMounted && loadingPercentage !== 100 && <div>Loading Model: {loadingPercentage}%</div>}
             </>
         )
     }

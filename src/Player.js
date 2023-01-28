@@ -1,6 +1,16 @@
 import { Component } from 'react';
 import * as THREE from 'three';
 
+const hoverModes = {
+    NONE: -1,
+    CRUISER: 0,
+    BATTLESHIP: 1,
+    SUBMARINE: 2,
+    DESTROYER: 3,
+    CARRIER: 4
+}
+
+
 class Player extends Component {
     // player has x, y, z, rotation x, y, z
     constructor(props) {
@@ -8,6 +18,7 @@ class Player extends Component {
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.velocity = new THREE.Vector3();
+        this.hoverMode = hoverModes.CRUISER;
     }
 
     update( deltaTime ) {

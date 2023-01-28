@@ -1,11 +1,20 @@
 import { Component } from 'react';
 import * as THREE from 'three';
 
+const hoverAreas = [
+    {x: 2, y: 1},
+    {x: 3, y: 2},
+    {x: 3, y: 1},
+    {x: 4, y: 2},
+    {x: 5, y: 3}
+];
+
 class Board extends Component {
     constructor(props) {
         super(props);
         this.tiles = new THREE.Group();
         this.objects = [];
+        this.hoveredTiles = [];
     }
 
     createBoard() {
@@ -23,6 +32,39 @@ class Board extends Component {
         }
         console.log("board::", this.tiles);
     }
+
+
+    hoverTiles(camera, hoverMode) {
+        // clear previous hovered tiles
+        this.hoveredTiles.forEach(tile => {
+            tile.material.color.set( 0x00ff00 );
+        });
+        this.hoveredTiles = [];
+
+        if (hoverMode != -1) { // if not in none mode
+            const lookAt = new THREE.Vector3();
+            camera.camera.getWorldDirection(lookAt)
+            camera.raycaster.set( camera.camera.position, lookAt );
+            const intersects = camera.raycaster.intersectObjects( this.tiles.children );
+            if ( intersects.length > 0 ) {
+                const hoverArea = hoverAreas[hoverMode];
+                const rootTile = intersects[0].object;
+                // console.log("rootTile::", rootTile);
+                const rootTileX = rootTile.position.x / 10;
+                const rootTileZ = rootTile.position.z / 10;
+                for (let i = 0; i < hoverArea.x; i++) {
+                    for (let j = 0; j < hoverArea.y; j++) {
+                        const tileX = rootTileX + i;
+                        const tileZ = rootTileZ + j;
+                        const tile = this.tiles.children[tileX * 10 + tileZ];
+                        tile.material.color.set( 0xff0000 );
+                        this.hoveredTiles.push(tile);
+                    }
+                }
+            }
+        }
+    }
+
 
     render() {
         return null;

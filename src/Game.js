@@ -2,6 +2,7 @@ import Player from './Player.js';
 import Renderer from './Renderer.js';
 import Board from './Board.js';
 import Camera from './Camera.js';
+import Crosshair from './Crosshair.js';
 
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
@@ -12,6 +13,9 @@ const style = {
 };
 
 const STEPS_PER_FRAME = 5;
+
+const downVector = new THREE.Vector3( 0, - 1, 0 );
+const upVector = new THREE.Vector3( 0, 1, 0 );
 
 class Game extends Component{
     componentDidMount() {
@@ -51,16 +55,6 @@ class Game extends Component{
         this.mount.appendChild( this.renderer.domElement );
         this.models = [];
         this.keyStates = {};
-        // this.reticle = new THREE.Mesh(
-        //     new THREE.RingGeometry( 0.02, 0.04, 32 ),
-        //     new THREE.MeshBasicMaterial( {
-        //         color: 0xffffff,
-        //         opacity: 0.5,
-        //         transparent: true
-        //     } )
-        // );
-        // this.reticle.position.z = - 1;
-        // this.scene.add( this.reticle );
     };
 
     loadModels = () => {
@@ -94,7 +88,7 @@ class Game extends Component{
                 // set object name
                 object.name = "Elephant_3";
                 // scale
-                object.scale.set(50, 50, 50);
+                object.scale.set(5, 5, 5);
                 this.scene.add( object );
                 // const el = this.scene.getObjectByName("Elephant_3");
                 this.models.push(object);
@@ -138,10 +132,11 @@ class Game extends Component{
         for ( let i = 0; i < STEPS_PER_FRAME; i++ ) {
             this.controls( deltaTime );
             this.player.update( deltaTime );
-            // this.reticle.position.copy( this.player.position.add( this.player.direction.multiplyScalar( 2 ) ) );
         }
 
-        this.camera.hoverTiles(this.board.tiles);
+        if ( this.player.hoverMode != -1 ) {
+            this.board.hoverTiles(this.camera, this.player.hoverMode);
+        }
 
         this.renderer.render( this.scene, this.camera.camera );
 
@@ -172,11 +167,12 @@ class Game extends Component{
         if ( this.keyStates[ 'KeyD' ] ) {
             this.player.velocity.add( this.player.getSideVector().multiplyScalar( speedDelta ) );
         }
-        // if ( playerOnFloor ) {
-        //     if ( this.keyStates[ 'Space' ] ) {
-        //         this.player.velocity.y = 15;
-        //     }
-        // }
+        if ( this.keyStates[ 'Space' ] ) {
+            this.player.velocity.y = 1;
+        }
+        if ( this.keyStates[ 'ShiftLeft' ] ) {
+            this.player.velocity.y = - 1;
+        }
     }
 
     keyDownListener = ( event ) => {
@@ -205,7 +201,12 @@ class Game extends Component{
     };
 
     render() {
-        return <div style={style} ref={ref => (this.mount = ref)} />;
+        return (
+            <>
+                <Crosshair />
+                <div style={style} ref={ref => (this.mount = ref)} />
+            </>
+        );
     }
 }
 
