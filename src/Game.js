@@ -53,7 +53,7 @@ class Game extends Component{
         this.scene.add(this.board.tiles);
 
         this.mount.appendChild( this.renderer.domElement );
-        this.models = [];
+        this.models = new THREE.Group();
         this.keyStates = {};
     };
 
@@ -61,37 +61,18 @@ class Game extends Component{
         // instantiate a loader
         const loader = new OBJLoader();
 
-        // load cloud a resource
-        loader.load(
-            'https://api.belkhiri.dev/models/cloud.obj',
-            ( object ) => {
-                // set object name
-                object.name = "Elephant_4";
-                // this.scene.add( object );
-                // const el = this.scene.getObjectByName("Elephant_4");
-                this.models.push(object);
-            },
-             ( xhr ) => {
-                const loadingPercentage = Math.ceil(xhr.loaded / xhr.total * 100);
-                console.log( ( loadingPercentage ) + '% loaded' );
-                this.props.onProgress(loadingPercentage);
-            },
-             ( error ) => {
-                console.log( 'An error happened:' + error );
-            }
-        );
-
         // load  shark resource
         loader.load(
             'https://api.belkhiri.dev/models/shark.obj',
             ( object ) => {
                 // set object name
-                object.name = "Elephant_3";
+                object.name = "shark";
                 // scale
                 object.scale.set(5, 5, 5);
-                this.scene.add( object );
+                // this.scene.add( object );
                 // const el = this.scene.getObjectByName("Elephant_3");
-                this.models.push(object);
+                this.models.add(object);
+                this.scene.add(this.models);
             },
                 ( xhr ) => {
                 const loadingPercentage = Math.ceil(xhr.loaded / xhr.total * 100);
@@ -135,7 +116,18 @@ class Game extends Component{
         }
 
         if ( this.player.hoverMode != -1 ) {
-            this.board.hoverTiles(this.camera, this.player.hoverMode);
+            // this.board.hoverTiles(this.camera, this.player.hoverMode);
+            let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode);
+            if ( moveTile.rootTileX != -1 ) {
+                // move shark
+                this.models.children.filter((child) => {
+                    if (child.name == "shark") {
+                        child.position.x = moveTile.rootTileX * 10;
+                        child.position.z = moveTile.rootTileZ * 10;
+                    }
+                });
+            }
+
         }
 
         this.renderer.render( this.scene, this.camera.camera );
