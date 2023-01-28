@@ -1,6 +1,7 @@
 import Player from './Player.js';
-import Camera from './Camera.js';
 import Renderer from './Renderer.js';
+import Board from './Board.js';
+import Camera from './Camera.js';
 
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
@@ -35,19 +36,31 @@ class Game extends Component{
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
 
-        this.camera = new THREE.PerspectiveCamera( 70, window.innerWidth / window.innerHeight, 0.1, 1000 );
-        this.camera.rotation.order = 'YXZ';
-        console.log(this.camera.rotation);
-        this.player = new Player({camera: this.camera});
+        this.camera = new Camera();
+        this.camera.camera.rotation.order = 'YXZ';
+        this.player = new Player({camera: this.camera.camera});
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
         this.renderer = new Renderer();
         this.renderer.setSize( width, height );
-        this.camera.position.z = 500;
-        this.mount.appendChild( this.renderer.domElement );
+        this.camera.camera.position.z = 500;
+        this.board = new Board();
+        this.board.createBoard();
+        this.scene.add(this.board.tiles);
 
+        this.mount.appendChild( this.renderer.domElement );
         this.models = [];
         this.keyStates = {};
+        // this.reticle = new THREE.Mesh(
+        //     new THREE.RingGeometry( 0.02, 0.04, 32 ),
+        //     new THREE.MeshBasicMaterial( {
+        //         color: 0xffffff,
+        //         opacity: 0.5,
+        //         transparent: true
+        //     } )
+        // );
+        // this.reticle.position.z = - 1;
+        // this.scene.add( this.reticle );
     };
 
     loadModels = () => {
@@ -100,16 +113,6 @@ class Game extends Component{
     };
 
 
-    boardSetup = () => {
-        const board = new THREE.Group();
-        const boardGeometry = new THREE.BoxGeometry( 1000, 1000, 1000 );
-        const boardMaterial = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-        const boardMesh = new THREE.Mesh( boardGeometry, boardMaterial );
-        board.add(boardMesh);
-        this.scene.add(board);
-    };
-
-
     // adding some lights to the scene
     addLights = () => {
         const lights = [];
@@ -135,9 +138,12 @@ class Game extends Component{
         for ( let i = 0; i < STEPS_PER_FRAME; i++ ) {
             this.controls( deltaTime );
             this.player.update( deltaTime );
+            // this.reticle.position.copy( this.player.position.add( this.player.direction.multiplyScalar( 2 ) ) );
         }
 
-        this.renderer.render( this.scene, this.camera );
+        this.camera.hoverTiles(this.board.tiles);
+
+        this.renderer.render( this.scene, this.camera.camera );
 
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
@@ -147,20 +153,20 @@ class Game extends Component{
         const height = this.mount.clientHeight;
 
         this.renderer.setSize( width, height );
-        this.camera.aspect = width / height;
+        this.camera.camera.aspect = width / height;
 
-        this.camera.updateProjectionMatrix();
+        this.camera.camera.updateProjectionMatrix();
     };
 
     controls = ( deltaTime ) => {
         const speedDelta = deltaTime * 8;
-        if ( this.keyStates[ 'KeyZ' ] ) {
+        if ( this.keyStates[ 'KeyW' ] ) {
             this.player.velocity.add( this.player.getForwardVector().multiplyScalar( speedDelta ) );
         }
         if ( this.keyStates[ 'KeyS' ] ) {
             this.player.velocity.add( this.player.getForwardVector().multiplyScalar( - speedDelta ) );
         }
-        if ( this.keyStates[ 'KeyQ' ] ) {
+        if ( this.keyStates[ 'KeyA' ] ) {
             this.player.velocity.add( this.player.getSideVector().multiplyScalar( - speedDelta ) );
         }
         if ( this.keyStates[ 'KeyD' ] ) {
@@ -191,9 +197,9 @@ class Game extends Component{
 
     mouseMoveListener = ( event ) => {
         if ( document.pointerLockElement === document.body ) {
-            if (this.camera){
-                this.camera.rotation.y -= event.movementX / 500;
-                this.camera.rotation.x -= event.movementY / 500;
+            if (this.camera.camera){
+                this.camera.camera.rotation.y -= event.movementX / 500;
+                this.camera.camera.rotation.x -= event.movementY / 500;
             }
         }
     };

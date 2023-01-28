@@ -1,4 +1,3 @@
-import Camera from './Camera.js';
 import { Component } from 'react';
 import * as THREE from 'three';
 
@@ -14,9 +13,9 @@ class Player extends Component {
     update( deltaTime ) {
         let damping = Math.exp( - 4 * deltaTime ) - 1;
 
-        this.velocity.addScaledVector( this.velocity, damping/100 );
+        this.velocity.addScaledVector( this.velocity, damping );
 
-        const deltaPosition = this.velocity.clone().multiplyScalar( deltaTime );
+        const deltaPosition = this.velocity.clone().multiplyScalar( deltaTime * 10 );
         this.position = this.position.add( deltaPosition );
 
         this.props.camera.position.copy( this.position );
