@@ -2,9 +2,9 @@ import logo from './logo.svg';
 import './App.css';
 import Game from './Game.js';
 
-function App() {
+function App(props) {
   return (
-    <Game />
+    <Game onProgress={props.onProgress} />
   );
 }
 
