@@ -1,30 +1,49 @@
 import Camera from './Camera.js';
+import { Component } from 'react';
+import * as THREE from 'three';
 
-function Player(props){
-    const player = {movementFunction: playerMovement};
-
-    props.camera.position.z = 5;
-
-
-    function playerMovement() {
-        var input = document.addEventListener("keydown", function (event) {
-            console.log(event.keyCode);
-            if (event.keyCode == 81) {
-              props.camera.position.y -= 0.1;
-            }
-            if (event.keyCode == 83) {
-              props.camera.position.x += 0.1;
-            }
-            if (event.keyCode == 90) {
-              props.camera.position.x -= 0.1;
-            }
-            if (event.keyCode == 68) {
-              props.camera.position.y += 0.1;
-            }
-          });
+class Player extends Component {
+    // player has x, y, z, rotation x, y, z
+    constructor(props) {
+        super(props);
+        this.position = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        this.velocity = new THREE.Vector3();
     }
 
-    return player;
+    update( deltaTime ) {
+        let damping = Math.exp( - 4 * deltaTime ) - 1;
+
+        this.velocity.addScaledVector( this.velocity, damping/100 );
+
+        const deltaPosition = this.velocity.clone().multiplyScalar( deltaTime );
+        this.position = this.position.add( deltaPosition );
+
+        this.props.camera.position.copy( this.position );
+
+    }
+
+    getForwardVector() {
+        this.props.camera.getWorldDirection( this.direction );
+        this.direction.y = 0;
+        this.direction.normalize();
+
+        return this.direction;
+    }
+
+    getSideVector() {
+        this.props.camera.getWorldDirection( this.direction );
+        this.direction.y = 0;
+        this.direction.normalize();
+        this.direction.cross( this.props.camera.up );
+
+        return this.direction;
+
+    }
+
+    render() {
+        return null;
+    }
 }
 
 export default Player;
