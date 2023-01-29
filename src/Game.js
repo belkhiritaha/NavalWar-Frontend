@@ -69,7 +69,7 @@ class Game extends Component{
         Object.keys(hoverModes).forEach((mode, index) => {
             if (index > 0) {
                 loader.load(
-                    '/' + mode + '/Package/' + mode + '.obj',
+                    'https://api.belkhiri.dev/models/' + mode + '.obj',
                     ( object ) => {
                         object.name = mode;
                         object.scale.set(5, 5, 5);
@@ -78,7 +78,7 @@ class Game extends Component{
                         // change material of object
                         object.traverse( ( child ) => {
                             if ( child.isMesh ) {
-                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( '/' + mode + '/Package/' + mode + '.png' ) } );
+                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/' + mode + '.png' ) } );
                             }
                         } );
                     },
