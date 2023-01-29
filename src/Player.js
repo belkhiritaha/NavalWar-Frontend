@@ -3,11 +3,11 @@ import * as THREE from 'three';
 
 const hoverModes = {
     NONE: 0,
-    CRUISER: 1,
-    BATTLESHIP: 2,
-    SUBMARINE: 3,
-    DESTROYER: 4,
-    CARRIER: 5
+    MicroRecon: 1,
+    Warship: 2,
+    GalactixRacer: 3,
+    RedFighter: 4,
+    DualStriker: 5
 }
 
 const hoverAreas = [
@@ -35,7 +35,7 @@ class Player extends Component {
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.velocity = new THREE.Vector3();
-        this.hoverMode = hoverModes.CARRIER;
+        this.hoverMode = hoverModes.MicroRecon;
         this.hoverRotation = 0;
     }
 

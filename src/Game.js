@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { Component } from 'react';
 
-import { hoverRotationDirections } from './Player.js';
+import { hoverModes } from './Player.js';
 
 const style = {
     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'
@@ -66,24 +66,36 @@ class Game extends Component{
 
     loadModels = () => {
         const loader = new OBJLoader();
-        loader.load(
-            'https://api.belkhiri.dev/models/shark.obj',
-            ( object ) => {
-                object.name = "shark";
-                object.scale.set(5, 5, 5);
-                this.models.add(object);
-                this.scene.add(this.models);
-            },
-                ( xhr ) => {
-                const loadingPercentage = Math.ceil(xhr.loaded / xhr.total * 100);
-                console.log( ( loadingPercentage ) + '% loaded' );
-                this.props.onProgress(loadingPercentage);
-            },
+        Object.keys(hoverModes).forEach((mode, index) => {
+            if (index > 0) {
+                loader.load(
+                    '/' + mode + '/Package/' + mode + '.obj',
+                    ( object ) => {
+                        object.name = mode;
+                        object.scale.set(5, 5, 5);
+                        this.models.add(object);
+                        this.scene.add(this.models);
+                        // change material of object
+                        object.traverse( ( child ) => {
+                            if ( child.isMesh ) {
+                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( '/' + mode + '/Package/' + mode + '.png' ) } );
+                            }
+                        } );
+                    },
+                        ( xhr ) => {
+                        const loadingPercentage = Math.ceil(xhr.loaded / xhr.total * 100);
+                        console.log( ( loadingPercentage ) + '% loaded' );
+                        this.props.onProgress(loadingPercentage);
+                    },
 
-                ( error ) => {
-                console.log( 'An error happened:' + error );
+                        ( error ) => {
+                        console.log( 'An error happened:' + error );
+                    }
+                );
             }
-        );
+        });
+
+
 
     };
 
@@ -116,12 +128,10 @@ class Game extends Component{
         }
 
         if ( this.player.hoverMode != -1 ) {
-            // this.board.hoverTiles(this.camera, this.player.hoverMode);
             let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
             if ( moveTile.rootTileX != -1 ) {
-                // move shark
                 this.models.children.filter((child) => {
-                    if (child.name == "shark") {
+                    if (hoverModes[Object.keys(hoverModes).find(key => key === child.name)] == this.player.hoverMode) {
                         child.position.x = moveTile.rootTileX * 10;
                         child.position.z = moveTile.rootTileZ * 10;
                         child.rotation.y = - this.player.hoverRotation * Math.PI / 2;
