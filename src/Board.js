@@ -39,7 +39,6 @@ class Board extends Component {
         let rootTileZ = -1;
 
         if (hoverMode !== hoverModes.NONE) {
-            // if not in none mode
             const lookAt = new THREE.Vector3();
             camera.camera.getWorldDirection(lookAt);
             camera.raycaster.set(camera.camera.position, lookAt);
@@ -52,10 +51,17 @@ class Board extends Component {
                 rootTileZ = rootTile.position.z / 10;
                 try {
                     const newPlaceTiles = [];
+                    let tileX;
+                    let tileZ;
                     for (let i = 0; i < hoverArea.x; i++) {
                         for (let j = 0; j < hoverArea.y; j++) {
-                            const tileX = rootTileX + hoverRotationDirections[hoverRotation].x * i;
-                            const tileZ = rootTileZ + hoverRotationDirections[hoverRotation].y * i;
+                            if (hoverRotation % 2 === 0) {
+                                tileX = rootTileX + hoverRotationDirections[hoverRotation].x * i;
+                                tileZ = rootTileZ + hoverRotationDirections[hoverRotation].y * j;
+                            } else {
+                                tileX = rootTileX + hoverRotationDirections[hoverRotation].y * j;
+                                tileZ = rootTileZ + hoverRotationDirections[hoverRotation].x * i;
+                            }
                             const tile = this.tiles.children[tileX * 10 + tileZ];
                             if (!tile) throw new Error("Cannot place ship here");
                             newPlaceTiles.push(tile);
