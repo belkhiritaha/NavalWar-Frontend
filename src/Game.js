@@ -8,6 +8,8 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { Component } from 'react';
 
+import { hoverRotationDirections } from './Player.js';
+
 const style = {
     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'
 };
@@ -115,13 +117,14 @@ class Game extends Component{
 
         if ( this.player.hoverMode != -1 ) {
             // this.board.hoverTiles(this.camera, this.player.hoverMode);
-            let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode);
+            let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
             if ( moveTile.rootTileX != -1 ) {
                 // move shark
                 this.models.children.filter((child) => {
                     if (child.name == "shark") {
                         child.position.x = moveTile.rootTileX * 10;
                         child.position.z = moveTile.rootTileZ * 10;
+                        child.rotation.y = - this.player.hoverRotation * Math.PI / 2;
                     }
                 });
             }
@@ -173,8 +176,12 @@ class Game extends Component{
         this.keyStates[ event.code ] = false;
         if ( event.code == 'KeyE' ) {
             this.player.hoverMode += 1;
-            if ( this.player.hoverMode > 6 ) this.player.hoverMode = 0;
+            if ( this.player.hoverMode > 5 ) this.player.hoverMode = 0;
             this.setState({hoverMode: this.player.hoverMode});
+        }
+        if ( event.code == 'KeyR' ) {
+            this.player.hoverRotation += 1;
+            if ( this.player.hoverRotation > 3 ) this.player.hoverRotation = 0;
         }
     };
 

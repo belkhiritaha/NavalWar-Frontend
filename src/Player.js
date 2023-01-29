@@ -10,6 +10,23 @@ const hoverModes = {
     CARRIER: 5
 }
 
+const hoverAreas = [
+    { x: 0, y: 0 },
+    { x: 2, y: 1 },
+    { x: 3, y: 2 },
+    { x: 3, y: 1 },
+    { x: 4, y: 2 },
+    { x: 5, y: 3 }
+];
+
+const hoverRotationDirections = [
+    { x: 1, y: 0 },
+    { x: 0, y: 1 },
+    { x: -1, y: 0 },
+    { x: 0, y: -1 }
+];
+
+
 
 class Player extends Component {
     // player has x, y, z, rotation x, y, z
@@ -19,6 +36,7 @@ class Player extends Component {
         this.direction = new THREE.Vector3();
         this.velocity = new THREE.Vector3();
         this.hoverMode = hoverModes.CARRIER;
+        this.hoverRotation = 0;
     }
 
     update( deltaTime ) {
@@ -57,4 +75,4 @@ class Player extends Component {
 }
 
 export default Player;
-export { hoverModes };
+export { hoverModes, hoverAreas, hoverRotationDirections };

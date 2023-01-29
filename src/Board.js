@@ -1,16 +1,7 @@
 import { Component } from 'react';
 import * as THREE from 'three';
 
-import { hoverModes } from './Player';
-
-const hoverAreas = [
-    { x: 0, y: 0 },
-    { x: 2, y: 1 },
-    { x: 3, y: 2 },
-    { x: 3, y: 1 },
-    { x: 4, y: 2 },
-    { x: 5, y: 3 }
-];
+import { hoverModes , hoverAreas , hoverRotationDirections } from './Player.js';
 
 class Board extends Component {
     constructor(props) {
@@ -37,7 +28,7 @@ class Board extends Component {
     }
 
 
-    hoverTiles(camera, hoverMode) {
+    hoverTiles(camera, hoverMode, hoverRotation) {
         // clear previous hovered tiles
         this.hoveredTiles.forEach(tile => {
             tile.material.color.set(0x00ff00);
@@ -63,8 +54,8 @@ class Board extends Component {
                     const newPlaceTiles = [];
                     for (let i = 0; i < hoverArea.x; i++) {
                         for (let j = 0; j < hoverArea.y; j++) {
-                            const tileX = rootTileX + i;
-                            const tileZ = rootTileZ + j;
+                            const tileX = rootTileX + hoverRotationDirections[hoverRotation].x * i;
+                            const tileZ = rootTileZ + hoverRotationDirections[hoverRotation].y * i;
                             const tile = this.tiles.children[tileX * 10 + tileZ];
                             if (!tile) throw new Error("Cannot place ship here");
                             newPlaceTiles.push(tile);
