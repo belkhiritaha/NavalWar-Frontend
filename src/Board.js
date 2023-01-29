@@ -1,7 +1,10 @@
 import { Component } from 'react';
 import * as THREE from 'three';
 
+import { hoverModes } from './Player';
+
 const hoverAreas = [
+    { x: 0, y: 0 },
     { x: 2, y: 1 },
     { x: 3, y: 2 },
     { x: 3, y: 1 },
@@ -44,7 +47,7 @@ class Board extends Component {
         let rootTileX = -1;
         let rootTileZ = -1;
 
-        if (hoverMode !== -1) {
+        if (hoverMode !== hoverModes.NONE) {
             // if not in none mode
             const lookAt = new THREE.Vector3();
             camera.camera.getWorldDirection(lookAt);

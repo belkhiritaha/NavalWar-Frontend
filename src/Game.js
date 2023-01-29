@@ -2,7 +2,7 @@ import Player from './Player.js';
 import Renderer from './Renderer.js';
 import Board from './Board.js';
 import Camera from './Camera.js';
-import Crosshair from './Crosshair.js';
+import HUD from './HUD.js';
 
 import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
@@ -18,6 +18,10 @@ const downVector = new THREE.Vector3( 0, - 1, 0 );
 const upVector = new THREE.Vector3( 0, 1, 0 );
 
 class Game extends Component{
+    state = {
+        hoverMode: 0
+    };
+
     componentDidMount() {
         this.sceneSetup();
         this.addLights();
@@ -43,6 +47,7 @@ class Game extends Component{
         this.camera = new Camera();
         this.camera.camera.rotation.order = 'YXZ';
         this.player = new Player({camera: this.camera.camera});
+        this.setState({hoverMode: this.player.hoverMode});
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
         this.renderer = new Renderer();
@@ -58,19 +63,12 @@ class Game extends Component{
     };
 
     loadModels = () => {
-        // instantiate a loader
         const loader = new OBJLoader();
-
-        // load  shark resource
         loader.load(
             'https://api.belkhiri.dev/models/shark.obj',
             ( object ) => {
-                // set object name
                 object.name = "shark";
-                // scale
                 object.scale.set(5, 5, 5);
-                // this.scene.add( object );
-                // const el = this.scene.getObjectByName("Elephant_3");
                 this.models.add(object);
                 this.scene.add(this.models);
             },
@@ -173,6 +171,11 @@ class Game extends Component{
 
     keyUpListener = ( event ) => {
         this.keyStates[ event.code ] = false;
+        if ( event.code == 'KeyE' ) {
+            this.player.hoverMode += 1;
+            if ( this.player.hoverMode > 6 ) this.player.hoverMode = 0;
+            this.setState({hoverMode: this.player.hoverMode});
+        }
     };
 
     clickDownListener = () => {
@@ -195,7 +198,7 @@ class Game extends Component{
     render() {
         return (
             <>
-                <Crosshair />
+                <HUD hoverMode={this.state.hoverMode} />
                 <div style={style} ref={ref => (this.mount = ref)} />
             </>
         );

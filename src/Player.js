@@ -2,12 +2,12 @@ import { Component } from 'react';
 import * as THREE from 'three';
 
 const hoverModes = {
-    NONE: -1,
-    CRUISER: 0,
-    BATTLESHIP: 1,
-    SUBMARINE: 2,
-    DESTROYER: 3,
-    CARRIER: 4
+    NONE: 0,
+    CRUISER: 1,
+    BATTLESHIP: 2,
+    SUBMARINE: 3,
+    DESTROYER: 4,
+    CARRIER: 5
 }
 
 
@@ -18,7 +18,7 @@ class Player extends Component {
         this.position = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         this.velocity = new THREE.Vector3();
-        this.hoverMode = hoverModes.CRUISER;
+        this.hoverMode = hoverModes.CARRIER;
     }
 
     update( deltaTime ) {
@@ -57,3 +57,4 @@ class Player extends Component {
 }
 
 export default Player;
+export { hoverModes };
