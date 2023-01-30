@@ -16,9 +16,6 @@ const style = {
 
 const STEPS_PER_FRAME = 5;
 
-const downVector = new THREE.Vector3( 0, - 1, 0 );
-const upVector = new THREE.Vector3( 0, 1, 0 );
-
 class Game extends Component{
     state = {
         hoverMode: 0
@@ -95,8 +92,12 @@ class Game extends Component{
             }
         });
 
-
-
+        this.scene.background = new THREE.CubeTextureLoader().setPath("https://api.belkhiri.dev/models/").load([
+            "right.png", "left.png",
+            "top.png", "bottom.png",
+            "front.png", "back.png"
+        ]);
+        
     };
 
 
