@@ -70,7 +70,7 @@ class Game extends Component{
     };
     
     loadModels = () => {
-        this.scene.background = new THREE.CubeTextureLoader().setPath("/skybox/").load([
+        this.scene.background = new THREE.CubeTextureLoader().setPath("https://api.belkhiri.dev/models/").load([
             "right.png", "left.png",
             "top.png", "bottom.png",
             "front.png", "back.png"
@@ -88,7 +88,7 @@ class Game extends Component{
         Object.keys(hoverModes).forEach((mode, index) => {
             if (index > 0) {
                 loader.load(
-                    '/' + mode + '/Package/' + mode + '.obj',
+                    'https://api.belkhiri.dev/models/' + mode + '.obj',
                     ( object ) => {
                         object.name = mode;
                         const scale = this.modelsSettings[mode].scale;
@@ -103,7 +103,7 @@ class Game extends Component{
                         // change material of object
                         object.traverse( ( child ) => {
                             if ( child.isMesh ) {
-                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( '/' + mode + '/Package/' + mode + '.png' ) } );
+                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/' + mode + '.png' ) } );
                             }
                         } );
                     },
@@ -121,9 +121,9 @@ class Game extends Component{
         });
 
         loader.load(
-            '/spacestations/station06_ring.obj',
+            'https://api.belkhiri.dev/models/station06_ring.obj',
             ( object ) => {
-                object.name = "station6";
+                object.name = "station1";
                 object.scale.set(10, 10, 10);
                 object.position.set(70, -30, 70);
                 this.models.add(object);
@@ -131,7 +131,7 @@ class Game extends Component{
                 // change material of object
                 object.traverse( ( child ) => {
                     if ( child.isMesh ) {
-                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( '/spacestations/station06_ring_specular.png' ) } );
+                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/station06_ring_specular.png' ) } );
                     }
                 } );
 
@@ -145,7 +145,7 @@ class Game extends Component{
         )
 
         loader.load(
-            '/spacestations/station01.obj',
+            'https://api.belkhiri.dev/models/station01.obj',
             ( object ) => {
                 object.name = "station3";
                 object.scale.set(10, 10, 10);
@@ -156,7 +156,7 @@ class Game extends Component{
                 // change material of object
                 object.traverse( ( child ) => {
                     if ( child.isMesh ) {
-                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( '/spacestations/station01_specular.png' ) } );
+                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/station01_specular.png' ) } );
                     }
                 } );
             }
