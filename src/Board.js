@@ -3,28 +3,31 @@ import * as THREE from 'three';
 
 import { hoverModes , hoverAreas , hoverRotationDirections } from './Player.js';
 
+const TILE_SIZE = 15;
+
 class Board extends Component {
     constructor(props) {
         super(props);
         this.tiles = new THREE.Group();
         this.objects = [];
         this.hoveredTiles = [];
+        this.z0 = 0;
     }
 
-    createBoard() {
+    createBoard(z0) {
         for (let i = 0; i < 10; i++) {
             for (let j = 0; j < 10; j++) {
-                const tileGeometry = new THREE.PlaneGeometry(10, 10, 1, 1);
+                const tileGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE, 1, 1);
                 const tileMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
                 const tile = new THREE.Mesh(tileGeometry, tileMaterial);
                 tile.rotation.x = Math.PI / 2;
-                tile.position.y = -10;
-                tile.position.x = i * 10;
-                tile.position.z = j * 10;
+                tile.position.y = - TILE_SIZE;
+                tile.position.x = z0 + i * TILE_SIZE;
+                tile.position.z =  j * TILE_SIZE;
                 this.tiles.add(tile);
             }
         }
-        console.log("board::", this.tiles);
+        this.z0 = z0;
     }
 
 
@@ -38,17 +41,12 @@ class Board extends Component {
         let rootTileX = -1;
         let rootTileZ = -1;
 
-        if (hoverMode !== hoverModes.NONE) {
-            const lookAt = new THREE.Vector3();
-            camera.camera.getWorldDirection(lookAt);
-            camera.raycaster.set(camera.camera.position, lookAt);
-            const intersects = camera.raycaster.intersectObjects(this.tiles.children);
-
-            if (intersects.length > 0) {
+        if (hoverMode !== hoverModes.NONE) {    
+            const { tileX, tileZ } = this.getPointedTile(camera);
+            if (tileX !== -1 && tileZ !== -1) {
+                rootTileX = tileX;
+                rootTileZ = tileZ;
                 const hoverArea = hoverAreas[hoverMode];
-                const rootTile = intersects[0].object;
-                rootTileX = rootTile.position.x / 10;
-                rootTileZ = rootTile.position.z / 10;
                 try {
                     const newPlaceTiles = [];
                     let tileX;
@@ -76,11 +74,44 @@ class Board extends Component {
                 } catch (error) {
                     rootTileX = -1;
                     rootTileZ = -1;
-                    // console.error(error.message);
                 }
             }
         }
         return { rootTileX, rootTileZ };
+    }
+
+    getPointedTile(camera) {
+        const lookAt = new THREE.Vector3();
+        camera.camera.getWorldDirection(lookAt);
+        camera.raycaster.set(camera.camera.position, lookAt);
+        const intersects = camera.raycaster.intersectObjects(this.tiles.children);
+        if (intersects.length > 0) {
+            const tile = intersects[0].object;
+            const tileX = Math.round(tile.position.x / TILE_SIZE - this.z0 / TILE_SIZE);
+            const tileZ = Math.round(tile.position.z / TILE_SIZE);
+            return { tileX, tileZ };
+        }
+        return { tileX: -1, tileZ: -1 };
+    }
+
+
+    hoverEnnemyTiles(camera) {
+        // clear previous hovered tiles
+        this.hoveredTiles.forEach(tile => {
+            tile.material.color.set(0x00ff00);
+        }
+        );
+        this.hoveredTiles = [];
+
+        const { tileX, tileZ } = this.getPointedTile(camera);
+        if (tileX !== -1 && tileZ !== -1) {
+            const tile = this.tiles.children[tileX * 10 + tileZ];
+            this.hoveredTiles.push(tile);
+            this.hoveredTiles.forEach(tile => {
+                tile.material.color.set(0xff0000);
+            });
+        }
+        return { tileX, tileZ };
     }
 
 
@@ -90,3 +121,4 @@ class Board extends Component {
 }
 
 export default Board;
+export { TILE_SIZE };

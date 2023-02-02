@@ -26,10 +26,15 @@ const hoverRotationDirections = [
     { x: -1, y: -1 }
 ];
 
+const modes = {
+    ATTACK: 0,
+    SETUP: 1
+}
+
+
 
 
 class Player extends Component {
-    // player has x, y, z, rotation x, y, z
     constructor(props) {
         super(props);
         this.position = new THREE.Vector3();
@@ -37,6 +42,7 @@ class Player extends Component {
         this.velocity = new THREE.Vector3();
         this.hoverMode = hoverModes.MicroRecon;
         this.hoverRotation = 0;
+        this.mode = modes.SETUP;
     }
 
     update( deltaTime ) {
