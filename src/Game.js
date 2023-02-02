@@ -77,7 +77,7 @@ class Game extends Component{
         ]);
         
         // read models_settings.json
-        fetch("/models_settings.json")
+        fetch("https://api.belkhiri.dev/models/models_settings.json")
         .then(response => response.json())
         .then(data => {
             this.modelsSettings = data;
