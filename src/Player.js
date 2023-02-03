@@ -43,6 +43,7 @@ class Player extends Component {
         this.hoverMode = hoverModes.MicroRecon;
         this.hoverRotation = 0;
         this.mode = modes.SETUP;
+        this.ships = [];
     }
 
     update( deltaTime ) {

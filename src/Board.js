@@ -4,6 +4,7 @@ import * as THREE from 'three';
 import { hoverModes , hoverAreas , hoverRotationDirections } from './Player.js';
 
 const TILE_SIZE = 15;
+const BOARD_SIZE = 10;
 
 class Board extends Component {
     constructor(props) {
@@ -15,8 +16,8 @@ class Board extends Component {
     }
 
     createBoard(z0) {
-        for (let i = 0; i < 10; i++) {
-            for (let j = 0; j < 10; j++) {
+        for (let i = 0; i < BOARD_SIZE; i++) {
+            for (let j = 0; j < BOARD_SIZE; j++) {
                 const tileGeometry = new THREE.PlaneGeometry(TILE_SIZE, TILE_SIZE, 1, 1);
                 const tileMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00, side: THREE.DoubleSide, wireframe: true });
                 const tile = new THREE.Mesh(tileGeometry, tileMaterial);
@@ -32,7 +33,6 @@ class Board extends Component {
 
 
     hoverTiles(camera, hoverMode, hoverRotation) {
-        // clear previous hovered tiles
         this.hoveredTiles.forEach(tile => {
             tile.material.color.set(0x00ff00);
         });
@@ -60,8 +60,8 @@ class Board extends Component {
                                 tileX = rootTileX + hoverRotationDirections[hoverRotation].y * j;
                                 tileZ = rootTileZ + hoverRotationDirections[hoverRotation].x * i;
                             }
-                            const tile = this.tiles.children[tileX * 10 + tileZ];
-                            if (!tile) throw new Error("Cannot place ship here");
+                            const tile = this.tiles.children[tileX * BOARD_SIZE + tileZ];
+                            if (!tile || tileX >= BOARD_SIZE || tileZ >= BOARD_SIZE ) throw new Error("Cannot place ship here");
                             newPlaceTiles.push(tile);
                         }
                     }
@@ -94,6 +94,12 @@ class Board extends Component {
         return { tileX: -1, tileZ: -1 };
     }
 
+    getTileFromPosition(x, z) {
+        const tileX = Math.round(x / TILE_SIZE - this.z0 / TILE_SIZE);
+        const tileZ = Math.round(z / TILE_SIZE);
+        return this.tiles.children[tileX * BOARD_SIZE + tileZ];
+    }
+
 
     hoverEnnemyTiles(camera) {
         // clear previous hovered tiles
@@ -105,7 +111,7 @@ class Board extends Component {
 
         const { tileX, tileZ } = this.getPointedTile(camera);
         if (tileX !== -1 && tileZ !== -1) {
-            const tile = this.tiles.children[tileX * 10 + tileZ];
+            const tile = this.tiles.children[tileX * BOARD_SIZE + tileZ];
             this.hoveredTiles.push(tile);
             this.hoveredTiles.forEach(tile => {
                 tile.material.color.set(0xff0000);
@@ -122,3 +128,4 @@ class Board extends Component {
 
 export default Board;
 export { TILE_SIZE };
+export { BOARD_SIZE };

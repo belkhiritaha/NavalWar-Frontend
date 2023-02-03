@@ -1,4 +1,5 @@
 import Player from './Player.js';
+import Ship from './Ship.js';
 import Renderer from './Renderer.js';
 import Board from './Board.js';
 import Camera from './Camera.js';
@@ -8,10 +9,12 @@ import * as THREE from 'three';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 
-import { Component } from 'react';
+import { Component, useEffect } from 'react';
 
 import { hoverModes } from './Player.js';
+import { hoverAreas } from './Player.js';
 import { TILE_SIZE } from './Board.js';
+import { modelsSettings } from './constants.js';
 
 const style = {
     position: 'absolute', top: 0, left: 0, width: '100%', height: '100%'
@@ -19,11 +22,12 @@ const style = {
 
 const STEPS_PER_FRAME = 5;
 
+
 class Game extends Component{
     state = {
         hoverMode: 0
     };
-
+    
     componentDidMount() {
         this.sceneSetup();
         this.addLights();
@@ -34,18 +38,18 @@ class Game extends Component{
         window.addEventListener('keyup', this.keyUpListener);
         window.addEventListener('mousemove', this.mouseMoveListener);
         window.addEventListener('mousedown', this.clickDownListener);
-        window.addEventListener('mouseup', this.clickUpListener);
+        window.addEventListener('mouseup', this.clickUpListener.bind(this));
     }
-
+    
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleWindowResize);
         window.cancelAnimationFrame(this.requestID);
     }
-
+    
     sceneSetup = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
-
+        
         this.camera = new Camera();
         this.camera.camera.rotation.order = 'YXZ';
         this.player = new Player({camera: this.camera.camera});
@@ -62,10 +66,9 @@ class Game extends Component{
         this.ennemyBoard.createBoard(200);
         this.scene.add(this.board.tiles);
         this.scene.add(this.ennemyBoard.tiles);
-
+        
         this.mount.appendChild( this.renderer.domElement );
         this.models = new THREE.Group();
-        this.modelsSettings = {};
         this.keyStates = {};
     };
     
@@ -76,47 +79,15 @@ class Game extends Component{
             "front.png", "back.png"
         ]);
         
-        // read models_settings.json
-        fetch("https://api.belkhiri.dev/models/models_settings.json")
-        .then(response => response.json())
-        .then(data => {
-            this.modelsSettings = data;
-        });
-
-
         const loader = new OBJLoader();
         Object.keys(hoverModes).forEach((mode, index) => {
             if (index > 0) {
-                loader.load(
-                    'https://api.belkhiri.dev/models/' + mode + '.obj',
-                    ( object ) => {
-                        object.name = mode;
-                        const scale = this.modelsSettings[mode].scale;
-                        const offset = this.modelsSettings[mode].offset[this.player.hoverRotation];
-                        const rotation = this.modelsSettings[mode].rotation;
-                        console.log(scale, offset, rotation);
-                        object.scale.set(scale[0], scale[1], scale[2]);
-                        object.position.set(offset[0] * TILE_SIZE, offset[1] * TILE_SIZE, offset[2] * TILE_SIZE);
-                        object.rotation.set(rotation[0], rotation[1], rotation[2]);
-                        this.models.add(object);
-                        this.scene.add(this.models);
-                        // change material of object
-                        object.traverse( ( child ) => {
-                            if ( child.isMesh ) {
-                                child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/' + mode + '.png' ) } );
-                            }
-                        } );
-                    },
-                        ( xhr ) => {
-                        const loadingPercentage = Math.ceil(xhr.loaded / xhr.total * 100);
-                        console.log( ( loadingPercentage ) + '% loaded' );
-                        this.props.onProgress(loadingPercentage);
-                    },
-
-                        ( error ) => {
-                        console.log( 'An error happened:' + error );
-                    }
-                );
+                const ship = new Ship({name: mode,
+                                        dimensions: hoverModes[index],
+                                        modelSrc: 'https://api.belkhiri.dev/models/' + mode + '.obj',
+                                        textureSrc: 'https://api.belkhiri.dev/models/' + mode + '.png'});
+                ship.loadModel(loader, modelsSettings[mode], this.player.hoverRotation, this.models);
+                this.player.ships.push(ship);
             }
         });
 
@@ -195,12 +166,11 @@ class Game extends Component{
             if ( this.player.hoverMode != 0 ) {
                 let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
                 if ( moveTile.rootTileX != -1 ) {
-                    this.models.children.filter((child) => {
-                        if (hoverModes[Object.keys(hoverModes).find(key => key === child.name)] == this.player.hoverMode) {
-                            child.position.x = moveTile.rootTileX * TILE_SIZE + this.modelsSettings[child.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
-                            child.position.z = moveTile.rootTileZ * TILE_SIZE + this.modelsSettings[child.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
-                            child.rotation.y = - this.player.hoverRotation * Math.PI / 2 + this.modelsSettings[child.name].rotation[1];
-                        }
+                    this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode && ship.model)
+                    .forEach((ship) => {
+                        ship.model.position.x = moveTile.rootTileX * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
+                        ship.model.position.z = moveTile.rootTileZ * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
+                        ship.model.rotation.y = - this.player.hoverRotation * Math.PI / 2 + modelsSettings[ship.name].rotation[1];
                     });
                 }
 
@@ -272,7 +242,19 @@ class Game extends Component{
     };
 
     clickUpListener() {
-        if ( document.pointerLockElement !== null ) console.log('clickUpListener');
+        if ( document.pointerLockElement !== null ) {
+            if (this.player.mode == 1) {
+                this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode)
+                    .forEach((ship) => {
+                        console.log(ship);
+                        const shipCurrentTile = this.board.getTileFromPosition(ship.model.position.x, ship.model.position.z);
+                        if (shipCurrentTile.rootTileX != -1 && shipCurrentTile.rootTileZ != -1) {
+                            ship.putOnTile({x: shipCurrentTile.rootTileX, z: shipCurrentTile.rootTileZ}, this.player.hoverRotation);
+                        }
+
+                    });
+            }
+        };
     };
 
     mouseMoveListener = ( event ) => {
