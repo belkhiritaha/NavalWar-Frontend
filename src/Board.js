@@ -12,6 +12,7 @@ class Board extends Component {
         this.tiles = new THREE.Group();
         this.objects = [];
         this.hoveredTiles = [];
+        this.occupiedTiles = [];
         this.z0 = 0;
     }
 
@@ -25,59 +26,70 @@ class Board extends Component {
                 tile.position.y = - TILE_SIZE;
                 tile.position.x = z0 + i * TILE_SIZE;
                 tile.position.z =  j * TILE_SIZE;
+                tile.isTaken = false;
+                tile.index = { x: i, z: j };
                 this.tiles.add(tile);
+                tile.isOccupiedBy = -1;
             }
         }
         this.z0 = z0;
     }
 
+    getShipTiles(rootTile, dimensions, rotation) {
+        const placeTiles = [];
+        let tileX;
+        let tileZ;
+        for (let i = 0; i < dimensions.x; i++) {
+            for (let j = 0; j < dimensions.y; j++) {
+                if (rotation % 2 === 0) {
+                    tileX = rootTile.x + hoverRotationDirections[rotation].x * i;
+                    tileZ = rootTile.z + hoverRotationDirections[rotation].y * j;
+                } else {
+                    tileX = rootTile.x + hoverRotationDirections[rotation].y * j;
+                    tileZ = rootTile.z + hoverRotationDirections[rotation].x * i;
+                }
+                const tile = this.tiles.children[tileX * BOARD_SIZE + tileZ];
+                if (!tile || tileX >= BOARD_SIZE || tileX < 0 || tileZ < 0 || tileZ >= BOARD_SIZE ) throw new Error("Cannot place ship here");
+                placeTiles.push(tile.index);
+            }
+        }
+        // console.log(placeTiles);
+        return placeTiles;
+    }
+
 
     hoverTiles(camera, hoverMode, hoverRotation) {
-        this.hoveredTiles.forEach(tile => {
-            tile.material.color.set(0x00ff00);
+        this.tiles.children.forEach(tile => {
+            if (tile.isTaken) tile.material.color.set(0x0000ff);
+        });
+        this.hoveredTiles.forEach(tileCoords => {
+            const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);
+            if (!tile.isTaken) tile.material.color.set(0x00ff00);
         });
         this.hoveredTiles = [];
 
-        let rootTileX = -1;
-        let rootTileZ = -1;
-
         if (hoverMode !== hoverModes.NONE) {    
-            const { tileX, tileZ } = this.getPointedTile(camera);
-            if (tileX !== -1 && tileZ !== -1) {
-                rootTileX = tileX;
-                rootTileZ = tileZ;
+            const indexes = this.getPointedTile(camera);
+            if (indexes.x !== -1 && indexes.z !== -1) {
                 const hoverArea = hoverAreas[hoverMode];
                 try {
-                    const newPlaceTiles = [];
-                    let tileX;
-                    let tileZ;
-                    for (let i = 0; i < hoverArea.x; i++) {
-                        for (let j = 0; j < hoverArea.y; j++) {
-                            if (hoverRotation % 2 === 0) {
-                                tileX = rootTileX + hoverRotationDirections[hoverRotation].x * i;
-                                tileZ = rootTileZ + hoverRotationDirections[hoverRotation].y * j;
-                            } else {
-                                tileX = rootTileX + hoverRotationDirections[hoverRotation].y * j;
-                                tileZ = rootTileZ + hoverRotationDirections[hoverRotation].x * i;
-                            }
-                            const tile = this.tiles.children[tileX * BOARD_SIZE + tileZ];
-                            if (!tile || tileX >= BOARD_SIZE || tileZ >= BOARD_SIZE ) throw new Error("Cannot place ship here");
-                            newPlaceTiles.push(tile);
-                        }
-                    }
+                    const newPlaceTiles = this.getShipTiles(indexes, hoverArea, hoverRotation);
                     if (newPlaceTiles.length === hoverArea.x * hoverArea.y) {
-                        this.hoveredTiles = newPlaceTiles;
-                        this.hoveredTiles.forEach(tile => {
+                        newPlaceTiles.forEach(tileCoords => {
+                            this.hoveredTiles.push(tileCoords);
+                        });
+                        this.hoveredTiles.forEach(tileCoords => {
+                            const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);
                             tile.material.color.set(0xff0000);
                         });
+                        return indexes;
                     }
                 } catch (error) {
-                    rootTileX = -1;
-                    rootTileZ = -1;
+                    return { x: -1, z: -1 };
                 }
             }
         }
-        return { rootTileX, rootTileZ };
+        return { x: -1, z: -1 };
     }
 
     getPointedTile(camera) {
@@ -87,17 +99,25 @@ class Board extends Component {
         const intersects = camera.raycaster.intersectObjects(this.tiles.children);
         if (intersects.length > 0) {
             const tile = intersects[0].object;
-            const tileX = Math.round(tile.position.x / TILE_SIZE - this.z0 / TILE_SIZE);
-            const tileZ = Math.round(tile.position.z / TILE_SIZE);
-            return { tileX, tileZ };
+            return tile.index;
         }
-        return { tileX: -1, tileZ: -1 };
+        return { x: -1, z: -1 };
     }
 
-    getTileFromPosition(x, z) {
-        const tileX = Math.round(x / TILE_SIZE - this.z0 / TILE_SIZE);
-        const tileZ = Math.round(z / TILE_SIZE);
-        return this.tiles.children[tileX * BOARD_SIZE + tileZ];
+    getTileByIndex(indexes) {
+        return this.tiles.children[indexes.x * BOARD_SIZE + indexes.z];
+    }
+
+    getTileIndex(tile) {
+        return tile.index;
+    }
+
+
+    getTilesOccupiedByShip(index){
+        return this.occupiedTiles.filter(tile => 
+            {
+                if (tile.occupiedBy === index) return tile
+            });
     }
 
 
@@ -118,6 +138,23 @@ class Board extends Component {
             });
         }
         return { tileX, tileZ };
+    }
+
+    putShip(origin, dimensions){
+        const { rootX, rootZ } = { rootX: origin.x, rootZ: origin.z}
+        console.log(rootX)
+        const { x, y } = dimensions;
+        for (let i = 0; i < x; i++) {
+            for (let j = 0; j < y; j++) {
+                const tile = this.tiles.children[(rootX + i) * BOARD_SIZE + rootZ + j];
+                console.log(this.tiles.children[(rootX + i) * BOARD_SIZE + rootZ + j]);
+                console.log(tile)
+                console.log((rootX + i) * BOARD_SIZE + rootZ + j);
+                tile.material.color.set(0x0000ff);
+                console.log("changed this tile");
+                console.log(tile);
+            }
+        }
     }
 
 

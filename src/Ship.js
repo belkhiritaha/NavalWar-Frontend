@@ -1,6 +1,7 @@
 import { Component } from "react";
 import * as THREE from "three";
-import { TILE_SIZE } from "./Board";
+import { TILE_SIZE, BOARD_SIZE } from "./Board";
+import { hoverModes, hoverAreas, hoverRotationDirections } from "./Player";
 
 class Ship extends Component {
     constructor(props) {
@@ -14,14 +15,16 @@ class Ship extends Component {
         this.textureSrc = props.textureSrc;
         this.model = null;
         this.rotation = 0;
+        this.index = props.index;
     }
 
     loadModel(loader, modelSettings, hoverRotation, modelsList) {
-        console.log(modelSettings)
         loader.load(this.modelSrc, (object) => {
             object.traverse((child) => {
                 if (child.isMesh) {
                     child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( this.textureSrc ) } );
+                    child.material.transparent = true;
+                    child.material.opacity = 0.3;
                 }
             });
             object.name = this.name;
@@ -42,23 +45,32 @@ class Ship extends Component {
         });
     }
 
-
-    putOnTile(tile, hoverRotation) {
-        this.position.x = tile.x;
-        this.position.z = tile.z;
-        this.rotation = hoverRotation;
-        // this.occupiedTiles = this.getOccupiedTiles();
-        this.isSetup = true;
-    }
+    // putOnTile(tileX, tileZ, hoverRotation) {
+    //     this.position.x = tileX;
+    //     console.log(tileX);
+    //     this.position.z = tileZ;
+    //     this.rotation = hoverRotation;
+    //     this.occupiedTiles = this.getOccupiedTiles();
+    //     this.isSetup = true;
+    // }
 
     getOccupiedTiles() {
         let tiles = [];
+        let originTile = {x: this.position.x, z: this.position.z};
+        console.log(originTile, this.dimensions)
+        let tileX;
+        let tileZ;
         for (let i = 0; i < this.dimensions.x; i++) {
             for (let j = 0; j < this.dimensions.y; j++) {
-                tiles.push({
-                    x: this.position.x + i,
-                    y: this.position.y + j,
-                });
+                if (this.rotation % 2 === 0) {
+                    tileX = originTile.x + hoverRotationDirections[this.rotation].x * i;
+                    tileZ = originTile.z + hoverRotationDirections[this.rotation].y * j;
+                } else {
+                    tileX = originTile.x + hoverRotationDirections[this.rotation].y * j;
+                    tileZ = originTile.z + hoverRotationDirections[this.rotation].x * i;
+                }
+                if ( tileX >= BOARD_SIZE || tileX < 0 || tileZ < 0 || tileZ >= BOARD_SIZE ) throw new Error("Cannot place ship here");
+                tiles.push({x: tileX, z: tileZ});
             }
         }
         return tiles;

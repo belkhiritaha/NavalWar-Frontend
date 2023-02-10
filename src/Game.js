@@ -1,7 +1,7 @@
 import Player from './Player.js';
 import Ship from './Ship.js';
 import Renderer from './Renderer.js';
-import Board from './Board.js';
+import Board, { BOARD_SIZE } from './Board.js';
 import Camera from './Camera.js';
 import HUD from './HUD.js';
 
@@ -83,9 +83,11 @@ class Game extends Component{
         Object.keys(hoverModes).forEach((mode, index) => {
             if (index > 0) {
                 const ship = new Ship({name: mode,
-                                        dimensions: hoverModes[index],
+                                        dimensions: hoverAreas[index],
                                         modelSrc: 'https://api.belkhiri.dev/models/' + mode + '.obj',
-                                        textureSrc: 'https://api.belkhiri.dev/models/' + mode + '.png'});
+                                        textureSrc: 'https://api.belkhiri.dev/models/' + mode + '.png',
+                                        board: this.board,
+                                        index: index});
                 ship.loadModel(loader, modelsSettings[mode], this.player.hoverRotation, this.models);
                 this.player.ships.push(ship);
             }
@@ -163,18 +165,18 @@ class Game extends Component{
         }
 
         if ( this.player.mode == 1 ) {
-            if ( this.player.hoverMode != 0 ) {
-                let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
-                if ( moveTile.rootTileX != -1 ) {
-                    this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode && ship.model)
-                    .forEach((ship) => {
-                        ship.model.position.x = moveTile.rootTileX * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
-                        ship.model.position.z = moveTile.rootTileZ * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
+            let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
+            if ( moveTile.x != -1 ) {
+                this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode && ship.model)
+                .forEach((ship) => {
+                    if (!ship.isSetup) {
+                        ship.model.position.x = moveTile.x * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
+                        ship.model.position.z = moveTile.z * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
                         ship.model.rotation.y = - this.player.hoverRotation * Math.PI / 2 + modelsSettings[ship.name].rotation[1];
-                    });
-                }
-
+                    }
+                });
             }
+
         }
         else {
             this.ennemyBoard.hoverEnnemyTiles(this.camera);
@@ -223,10 +225,24 @@ class Game extends Component{
 
     keyUpListener = ( event ) => {
         this.keyStates[ event.code ] = false;
+        let shipSelection = -1;
         if ( event.code == 'KeyE' ) {
-            this.player.hoverMode += 1;
-            if ( this.player.hoverMode > 5 ) this.player.hoverMode = 0;
-            this.setState({hoverMode: this.player.hoverMode});
+            shipSelection = 0;
+        }
+        if ( event.code == 'Digit1' ) {
+            shipSelection = 1;
+        }
+        if ( event.code == 'Digit2' ) {
+            shipSelection = 2;
+        }
+        if ( event.code == 'Digit3' ) {
+            shipSelection = 3;
+        }
+        if ( event.code == 'Digit4' ) {
+            shipSelection = 4;
+        }
+        if ( event.code == 'Digit5' ) {
+            shipSelection = 5;
         }
         if ( event.code == 'KeyR' ) {
             this.player.hoverRotation += 1;
@@ -235,6 +251,20 @@ class Game extends Component{
         if ( event.code == 'KeyF' ) {
             this.player.mode = 1 - this.player.mode;
         }
+        if ( shipSelection != -1 ) {
+            const ship = this.player.ships.filter(ship => ship.index == shipSelection)[0];
+            if ( ship.isSetup ) {
+                ship.isSetup = false;
+                ship.model.position.x = -1000;
+                ship.model.position.z = -1000;
+                const tiles = this.board.getTilesOccupiedByShip(ship.index);
+                tiles.forEach((tile) => {
+                    tile.material.color.set(0x00ff00);
+                });
+            }  
+            this.player.hoverMode = shipSelection;
+        }
+        this.setState({hoverMode: this.player.hoverMode});
     };
 
     clickDownListener = () => {
@@ -244,12 +274,25 @@ class Game extends Component{
     clickUpListener() {
         if ( document.pointerLockElement !== null ) {
             if (this.player.mode == 1) {
-                this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode)
+                this.player.ships.filter(ship => ship.index == this.player.hoverMode)
                     .forEach((ship) => {
                         console.log(ship);
-                        const shipCurrentTile = this.board.getTileFromPosition(ship.model.position.x, ship.model.position.z);
-                        if (shipCurrentTile.rootTileX != -1 && shipCurrentTile.rootTileZ != -1) {
-                            ship.putOnTile({x: shipCurrentTile.rootTileX, z: shipCurrentTile.rootTileZ}, this.player.hoverRotation);
+                        let shipOriginIndexs = this.board.getPointedTile(this.camera);
+                        if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
+                            ship.isSetup = true;
+                            ship.position.x = shipOriginIndexs.x;
+                            ship.position.z = shipOriginIndexs.z;
+                            ship.rotation = this.player.hoverRotation;
+                            const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
+                            occupiedTiles.forEach((tileCoord) => {
+                                const tile = this.board.getTileByIndex(tileCoord);
+                                this.board.occupiedTiles.push(tile);
+                                tile.isTaken = true;
+                                tile.occupiedBy = ship.index;
+                                this.player.hoverMode = 0;
+                                ship.model.children[0].material.opacity = 1;
+                            });
+                            console.log("hello");
                         }
 
                     });
@@ -267,12 +310,22 @@ class Game extends Component{
     };
 
     render() {
-        return (
-            <>
-                <HUD hoverMode={this.state.hoverMode} />
-                <div style={style} ref={ref => (this.mount = ref)} />
-            </>
-        );
+        if (this.player) {
+            return (
+                <>
+                    <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} />
+                    <div style={style} ref={ref => (this.mount = ref)} />
+                </>
+            );
+        }
+        else {
+            return (
+                <>
+                    <HUD hoverMode={0} ships={[]} />
+                    <div style={style} ref={ref => (this.mount = ref)} />
+                </>
+            );
+        }
     }
 }
 

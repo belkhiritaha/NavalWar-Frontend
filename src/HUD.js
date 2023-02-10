@@ -32,10 +32,14 @@ function HUD(props) {
         return (
             <ListGroup as="ul" style={{zIndex: 1000, position: "absolute", top: "50%", left: "0%", transform: "translate(0%, -50%)", color:"white"}}>
                 {Object.keys(hoverModes).map((mode, index) => {
-                    return (
-                        <ListGroup.Item as="li" key={index} style={{backgroundColor: props.hoverMode === index ? "lightblue" : "transparent", color: props.hoverMode === mode ? "black" : "white"}}>{mode}</ListGroup.Item>
-                    );
-                })}
+                    if (index > 0 && props.ships[index - 1]){
+                        const ship = props.ships[index - 1];
+                        let bgColor = props.hoverMode === index ? "lightblue" : "transparent";
+                        bgColor = ship.isSetup ? "#FFCCCB" : bgColor;
+                        const color = ship.isSetup ? "red" : "lightgreen";
+                        return (
+                            <ListGroup.Item as="li" key={index} style={{backgroundColor: bgColor, color: color}}>{mode}</ListGroup.Item>
+                        );}})}
             </ListGroup>
         );
     }
@@ -43,7 +47,7 @@ function HUD(props) {
     return (
         <>
             <Crosshair />
-            <ShipsMenu hoverMode={props.hoverMode} />
+            <ShipsMenu hoverMode={props.hoverMode} ships={props.ships} />
         </>
     );
 
