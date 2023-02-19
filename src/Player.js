@@ -76,6 +76,17 @@ class Player extends Component {
 
     }
 
+    tpUnsetShips(noMoveShipIndex) {
+        this.ships.forEach( (ship) => {
+            if ( !ship.isSetup && ship.index !== noMoveShipIndex ) {
+                console.log(ship.index);
+                ship.model.position.set( -1000, 0, -1000 );
+                ship.position.x = -1000;
+                ship.position.z = -1000;
+            }
+        } );
+    }
+
     render() {
         return null;
     }

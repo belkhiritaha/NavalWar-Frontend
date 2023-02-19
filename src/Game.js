@@ -23,11 +23,11 @@ const style = {
 const STEPS_PER_FRAME = 5;
 
 
-class Game extends Component{
+class Game extends Component {
     state = {
         hoverMode: 0
     };
-    
+
     componentDidMount() {
         this.sceneSetup();
         this.addLights();
@@ -40,24 +40,24 @@ class Game extends Component{
         window.addEventListener('mousedown', this.clickDownListener);
         window.addEventListener('mouseup', this.clickUpListener.bind(this));
     }
-    
+
     componentWillUnmount() {
         window.removeEventListener('resize', this.handleWindowResize);
         window.cancelAnimationFrame(this.requestID);
     }
-    
+
     sceneSetup = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
-        
+
         this.camera = new Camera();
         this.camera.camera.rotation.order = 'YXZ';
-        this.player = new Player({camera: this.camera.camera});
-        this.setState({hoverMode: this.player.hoverMode});
+        this.player = new Player({ camera: this.camera.camera });
+        this.setState({ hoverMode: this.player.hoverMode });
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
         this.renderer = new Renderer();
-        this.renderer.setSize( width, height );
+        this.renderer.setSize(width, height);
         this.camera.camera.position.z = 500;
         this.board = new Board();
         this.ennemyBoard = new Board();
@@ -66,28 +66,30 @@ class Game extends Component{
         this.ennemyBoard.createBoard(200);
         this.scene.add(this.board.tiles);
         this.scene.add(this.ennemyBoard.tiles);
-        
-        this.mount.appendChild( this.renderer.domElement );
+
+        this.mount.appendChild(this.renderer.domElement);
         this.models = new THREE.Group();
         this.keyStates = {};
     };
-    
+
     loadModels = () => {
         this.scene.background = new THREE.CubeTextureLoader().setPath("https://api.belkhiri.dev/models/").load([
             "right.png", "left.png",
             "top.png", "bottom.png",
             "front.png", "back.png"
         ]);
-        
+
         const loader = new OBJLoader();
         Object.keys(hoverModes).forEach((mode, index) => {
             if (index > 0) {
-                const ship = new Ship({name: mode,
-                                        dimensions: hoverAreas[index],
-                                        modelSrc: 'https://api.belkhiri.dev/models/' + mode + '.obj',
-                                        textureSrc: 'https://api.belkhiri.dev/models/' + mode + '.png',
-                                        board: this.board,
-                                        index: index});
+                const ship = new Ship({
+                    name: mode,
+                    dimensions: hoverAreas[index],
+                    modelSrc: 'https://api.belkhiri.dev/models/' + mode + '.obj',
+                    textureSrc: 'https://api.belkhiri.dev/models/' + mode + '.png',
+                    board: this.board,
+                    index: index
+                });
                 ship.loadModel(loader, modelsSettings[mode], this.player.hoverRotation, this.models);
                 this.player.ships.push(ship);
             }
@@ -95,18 +97,18 @@ class Game extends Component{
 
         loader.load(
             'https://api.belkhiri.dev/models/station06_ring.obj',
-            ( object ) => {
+            (object) => {
                 object.name = "station1";
                 object.scale.set(10, 10, 10);
                 object.position.set(70, -30, 70);
                 this.models.add(object);
                 this.scene.add(this.models);
                 // change material of object
-                object.traverse( ( child ) => {
-                    if ( child.isMesh ) {
-                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/station06_ring_specular.png' ) } );
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('https://api.belkhiri.dev/models/station06_ring_specular.png') });
                     }
-                } );
+                });
 
                 // clone object
                 const object2 = object.clone();
@@ -119,7 +121,7 @@ class Game extends Component{
 
         loader.load(
             'https://api.belkhiri.dev/models/station01.obj',
-            ( object ) => {
+            (object) => {
                 object.name = "station3";
                 object.scale.set(10, 10, 10);
                 object.position.set(-100, 0, 270);
@@ -127,11 +129,11 @@ class Game extends Component{
                 this.models.add(object);
                 this.scene.add(this.models);
                 // change material of object
-                object.traverse( ( child ) => {
-                    if ( child.isMesh ) {
-                        child.material = new THREE.MeshBasicMaterial( { map: new THREE.TextureLoader().load( 'https://api.belkhiri.dev/models/station01_specular.png' ) } );
+                object.traverse((child) => {
+                    if (child.isMesh) {
+                        child.material = new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('https://api.belkhiri.dev/models/station01_specular.png') });
                     }
-                } );
+                });
             }
         )
     };
@@ -142,39 +144,39 @@ class Game extends Component{
         const lights = [];
 
         // set color and intensity of lights
-        lights[ 0 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-        lights[ 1 ] = new THREE.PointLight( 0xffffff, 1, 0 );
-        lights[ 2 ] = new THREE.PointLight( 0xffffff, 1, 0 );
+        lights[0] = new THREE.PointLight(0xffffff, 1, 0);
+        lights[1] = new THREE.PointLight(0xffffff, 1, 0);
+        lights[2] = new THREE.PointLight(0xffffff, 1, 0);
 
         // place some lights around the scene for best looks and feel
-        lights[ 0 ].position.set( 0, 2000, 0 );
-        lights[ 1 ].position.set( 1000, 2000, 1000 );
-        lights[ 2 ].position.set( - 1000, - 2000, - 1000 );
+        lights[0].position.set(0, 2000, 0);
+        lights[1].position.set(1000, 2000, 1000);
+        lights[2].position.set(- 1000, - 2000, - 1000);
 
-        this.scene.add( lights[ 0 ] );
-        this.scene.add( lights[ 1 ] );
-        this.scene.add( lights[ 2 ] );
+        this.scene.add(lights[0]);
+        this.scene.add(lights[1]);
+        this.scene.add(lights[2]);
     };
 
     startAnimationLoop = () => {
-        const deltaTime = Math.min( 0.05, this.clock.getDelta() ) / STEPS_PER_FRAME;
-        
-        for ( let i = 0; i < STEPS_PER_FRAME; i++ ) {
-            this.controls( deltaTime );
-            this.player.update( deltaTime );
+        const deltaTime = Math.min(0.05, this.clock.getDelta()) / STEPS_PER_FRAME;
+
+        for (let i = 0; i < STEPS_PER_FRAME; i++) {
+            this.controls(deltaTime);
+            this.player.update(deltaTime);
         }
 
-        if ( this.player.mode == 1 ) {
+        if (this.player.mode == 1) {
             let moveTile = this.board.hoverTiles(this.camera, this.player.hoverMode, this.player.hoverRotation);
-            if ( moveTile.x != -1 ) {
+            if (moveTile.x != -1) {
                 this.player.ships.filter(ship => hoverModes[ship.name] == this.player.hoverMode && ship.model)
-                .forEach((ship) => {
-                    if (!ship.isSetup) {
-                        ship.model.position.x = moveTile.x * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
-                        ship.model.position.z = moveTile.z * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
-                        ship.model.rotation.y = - this.player.hoverRotation * Math.PI / 2 + modelsSettings[ship.name].rotation[1];
-                    }
-                });
+                    .forEach((ship) => {
+                        if (!ship.isSetup) {
+                            ship.model.position.x = moveTile.x * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][0] * TILE_SIZE;
+                            ship.model.position.z = moveTile.z * TILE_SIZE + modelsSettings[ship.name].offset[this.player.hoverRotation][2] * TILE_SIZE;
+                            ship.model.rotation.y = - this.player.hoverRotation * Math.PI / 2 + modelsSettings[ship.name].rotation[1];
+                        }
+                    });
             }
 
         }
@@ -182,7 +184,7 @@ class Game extends Component{
             this.ennemyBoard.hoverEnnemyTiles(this.camera);
         }
 
-        this.renderer.render( this.scene, this.camera.camera );
+        this.renderer.render(this.scene, this.camera.camera);
 
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
@@ -191,69 +193,84 @@ class Game extends Component{
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
 
-        this.renderer.setSize( width, height );
+        this.renderer.setSize(width, height);
         this.camera.camera.aspect = width / height;
 
         this.camera.camera.updateProjectionMatrix();
     };
 
-    controls = ( deltaTime ) => {
+    controls = (deltaTime) => {
         const speedDelta = deltaTime * 30;
-        if ( this.keyStates[ 'KeyW' ] ) {
-            this.player.velocity.add( this.player.getForwardVector().multiplyScalar( speedDelta ) );
+        if (this.keyStates['KeyW']) {
+            this.player.velocity.add(this.player.getForwardVector().multiplyScalar(speedDelta));
         }
-        if ( this.keyStates[ 'KeyS' ] ) {
-            this.player.velocity.add( this.player.getForwardVector().multiplyScalar( - speedDelta ) );
+        if (this.keyStates['KeyS']) {
+            this.player.velocity.add(this.player.getForwardVector().multiplyScalar(- speedDelta));
         }
-        if ( this.keyStates[ 'KeyA' ] ) {
-            this.player.velocity.add( this.player.getSideVector().multiplyScalar( - speedDelta ) );
+        if (this.keyStates['KeyA']) {
+            this.player.velocity.add(this.player.getSideVector().multiplyScalar(- speedDelta));
         }
-        if ( this.keyStates[ 'KeyD' ] ) {
-            this.player.velocity.add( this.player.getSideVector().multiplyScalar( speedDelta ) );
+        if (this.keyStates['KeyD']) {
+            this.player.velocity.add(this.player.getSideVector().multiplyScalar(speedDelta));
         }
-        if ( this.keyStates[ 'Space' ] ) {
+        if (this.keyStates['Space']) {
             this.player.velocity.y = 4;
         }
-        if ( this.keyStates[ 'ShiftLeft' ] ) {
+        if (this.keyStates['ShiftLeft']) {
             this.player.velocity.y = - 4;
         }
     }
 
-    keyDownListener = ( event ) => {
-        this.keyStates[ event.code ] = true;
+    keyDownListener = (event) => {
+        this.keyStates[event.code] = true;
     };
 
-    keyUpListener = ( event ) => {
-        this.keyStates[ event.code ] = false;
+    keyUpListener = (event) => {
+        this.keyStates[event.code] = false;
         let shipSelection = -1;
-        if ( event.code == 'KeyE' ) {
+        if (event.code == 'KeyE') {
             shipSelection = 0;
         }
-        if ( event.code == 'Digit1' ) {
-            shipSelection = 1;
+        if (event.code == 'Digit1') {
+            if (!this.player.ships[0].isSetup) {
+                this.player.tpUnsetShips(0);
+                shipSelection = 1;
+            }
         }
-        if ( event.code == 'Digit2' ) {
-            shipSelection = 2;
+        if (event.code == 'Digit2') {
+            if (!this.player.ships[1].isSetup) {
+                this.player.tpUnsetShips(1);
+                shipSelection = 2;
+            }
         }
-        if ( event.code == 'Digit3' ) {
-            shipSelection = 3;
+        if (event.code == 'Digit3') {
+            if (!this.player.ships[2].isSetup) {
+                this.player.tpUnsetShips(2);
+                shipSelection = 3;
+            }
         }
-        if ( event.code == 'Digit4' ) {
-            shipSelection = 4;
+        if (event.code == 'Digit4') {
+            if (!this.player.ships[3].isSetup) {
+                this.player.tpUnsetShips(3);
+                shipSelection = 4;
+            }
         }
-        if ( event.code == 'Digit5' ) {
-            shipSelection = 5;
+        if (event.code == 'Digit5') {
+            if (!this.player.ships[4].isSetup) {
+                this.player.tpUnsetShips(4);
+                shipSelection = 5;
+            }
         }
-        if ( event.code == 'KeyR' ) {
+        if (event.code == 'KeyR') {
             this.player.hoverRotation += 1;
-            if ( this.player.hoverRotation > 3 ) this.player.hoverRotation = 0;
+            if (this.player.hoverRotation > 3) this.player.hoverRotation = 0;
         }
-        if ( event.code == 'KeyF' ) {
+        if (event.code == 'KeyF') {
             this.player.mode = 1 - this.player.mode;
         }
-        if ( shipSelection != -1 ) {
+        if (shipSelection != -1) {
             const ship = this.player.ships.filter(ship => ship.index == shipSelection)[0];
-            if ( ship.isSetup ) {
+            if (ship.isSetup) {
                 ship.isSetup = false;
                 ship.model.position.x = -1000;
                 ship.model.position.z = -1000;
@@ -261,10 +278,10 @@ class Game extends Component{
                 tiles.forEach((tile) => {
                     tile.material.color.set(0x00ff00);
                 });
-            }  
+            }
             this.player.hoverMode = shipSelection;
         }
-        this.setState({hoverMode: this.player.hoverMode});
+        this.setState({ hoverMode: this.player.hoverMode });
     };
 
     clickDownListener = () => {
@@ -272,7 +289,7 @@ class Game extends Component{
     };
 
     clickUpListener() {
-        if ( document.pointerLockElement !== null ) {
+        if (document.pointerLockElement !== null) {
             if (this.player.mode == 1) {
                 this.player.ships.filter(ship => ship.index == this.player.hoverMode)
                     .forEach((ship) => {
@@ -292,17 +309,15 @@ class Game extends Component{
                                 this.player.hoverMode = 0;
                                 ship.model.children[0].material.opacity = 1;
                             });
-                            console.log("hello");
                         }
-
                     });
             }
         };
     };
 
-    mouseMoveListener = ( event ) => {
-        if ( document.pointerLockElement === document.body ) {
-            if (this.camera.camera){
+    mouseMoveListener = (event) => {
+        if (document.pointerLockElement === document.body) {
+            if (this.camera.camera) {
                 this.camera.camera.rotation.y -= event.movementX / 500;
                 this.camera.camera.rotation.x -= event.movementY / 500;
             }
