@@ -1,25 +1,63 @@
 import React, { Component } from "react";
 import ReactDOM from "react-dom/client";
 import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import 'typeface-quicksand';
 
 import App from "./App";
+import JoinGame from './components/JoinGame';
+import CreateGame from './components/CreateGame';
+import reportWebVitals from './reportWebVitals';
 
-class Container extends React.Component {
-    state = {isMounted: true};
+import './index.css';
 
-    render() {
-        const {isMounted = true, loadingPercentage = 0} = this.state;
-        return (
-            <>
-                {isMounted && <App onProgress={loadingPercentage => this.setState({ loadingPercentage })} />}
-            </>
-        )
-    }
+
+function JoinGameMenu(){
+
+  root.render(
+    <React.StrictMode>
+      <JoinGame />
+    </React.StrictMode>
+    );
 }
 
-const root = ReactDOM.createRoot(document.getElementById("root"));
+function CreateGameMenu(){
+
+  root.render(
+    <React.StrictMode>
+      <CreateGame />
+    </React.StrictMode>
+    );
+}
+
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+
+function Menu(){
+    root.render(
+        <React.StrictMode>
+                    <div className = "Title">
+                    <h1>SPATIAL WAR</h1>
+                </div>
+                <div className = "Buttons">
+                    <button className="button" type="button" onClick={JoinGameMenu}>
+                        JOIN GAME
+                    </button>
+                    <button className="button" type="button" onClick={CreateGameMenu}>
+                        CREATE GAME
+                    </button>
+                </div>
+        </React.StrictMode>
+    );
+}
+
 root.render(
-  <React.StrictMode>
-    <Container />
-  </React.StrictMode>
+    <React.StrictMode>
+        <Menu />
+    </React.StrictMode>
 );
+
+// If you want to start measuring performance in your app, pass a function
+// to log results (for example: reportWebVitals(console.log))
+// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+reportWebVitals();
+
