@@ -29,20 +29,28 @@ function CreateGameMenu(){
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+
+function Menu(){
+    root.render(
+        <React.StrictMode>
+                    <div className = "Title">
+                    <h1>SPATIAL WAR</h1>
+                </div>
+                <div className = "Buttons">
+                    <button className="button" type="button" onClick={JoinGameMenu}>
+                        JOIN GAME
+                    </button>
+                    <button className="button" type="button" onClick={CreateGameMenu}>
+                        CREATE GAME
+                    </button>
+                </div>
+        </React.StrictMode>
+    );
+}
 root.render(
-  <React.StrictMode>
-                <div className = "Title">
-                <h1>SPATIAL WAR</h1>
-            </div>
-            <div className = "Buttons">
-                <button className="button" type="button" onClick={JoinGameMenu}>
-                    JOIN GAME
-                </button>
-                <button className="button" type="button" onClick={CreateGameMenu}>
-                    CREATE GAME
-                </button>
-            </div>
-  </React.StrictMode>
+    <React.StrictMode>
+        <Menu />
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
