@@ -16,13 +16,46 @@ class CreateGame extends React.Component {
   }
 
   handleChange(event) {
-    this.setState({value: event.target.value});
+    this.setState({username: event.target.form[0].value});
   }
 
-  handleSubmit(event) {
-    alert('A name was submitted: ' + this.state.value);
-    event.preventDefault();
+  createGame(event) {
+    this.setState({isGameStarted: true});
+    console.log("Creating game");
+
+    const url = 'https://localhost:7080/api/game/';
+
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(response => response.json())
+    .then(data => {
+      // Manipuler les données de la réponse
+      console.log(data);
+    })
+    .catch(error => console.error('Error:', error))
+
+
+    /*if(responseCOde = 200){
+      const id_game = response.id;
+      const id_player = response.playerId;
+
+      //afficher l'id de la game
+      //mettre le joueur dans la game
+      url = 'https://localhost:7080/api/game/'+ id_game + '?playerId=' + id_player;
+      fetch(url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      })
+    }*/
+
   }
+
 
   render() {
     return (
@@ -36,14 +69,14 @@ class CreateGame extends React.Component {
         <h1>SPATIAL WAR</h1>
       </div>
       <div className = "CreateGameForm">
-        <form id='create' onSubmit={this.handleSubmit}>
+        <form id='create'>
           <label>
             <input type="text" placeholder='username' value={this.state.value} onChange={this.handleChange} />
           </label>
           <br />
           <input type="submit" value="Submit" />
         </form>
-        <button className="button" type="button" /*onClick={ CREER LA GAME AVEC LE FORMULAIRE PLUS HAUT }*/ >
+        <button className="button" type="button" onClick={ this.createGame } >
           CREATE
         </button>
       </div>
