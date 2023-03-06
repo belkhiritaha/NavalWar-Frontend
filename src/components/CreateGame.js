@@ -19,7 +19,7 @@ class CreateGame extends React.Component {
     this.setState({username: event.target.form[0].value});
   }
 
-  createGame(event) {
+  /*createGame(event) {
     this.setState({isGameStarted: true});
     console.log("Creating game");
 
@@ -31,15 +31,19 @@ class CreateGame extends React.Component {
         'Content-Type': 'application/json'
       },
     })
-    .then(response => response.json())
+    .then(response => 
+              if(response.status == 200){
+                                          await;
+                                        })
     .then(data => {
       // Manipuler les données de la réponse
       console.log(data);
     })
+    .then()
     .catch(error => console.error('Error:', error))
 
 
-    /*if(responseCOde = 200){
+    if(responseCOde = 200){
       const id_game = response.id;
       const id_player = response.playerId;
 
@@ -52,10 +56,53 @@ class CreateGame extends React.Component {
           'Content-Type': 'application/json'
         },
       })
-    }*/
+    }
 
+  }*/
+
+  createGame(event) {
+    this.setState({isGameStarted: true});
+    console.log("Creating game");
+  
+    const url = 'https://localhost:7080/api/game/';
+  
+    fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(response => {
+      if(response.status == 200) {
+        return response.json(); // renvoie la réponse sous forme de JSON
+      } else {
+        throw new Error('Erreur lors de la création de la partie');
+      }
+    })
+    .then(data => {
+      const id_game = data.id;
+      const id_player = data.playerId;
+  
+      console.log('ID de la partie :', id_game);
+  
+      // Ajouter le joueur à la partie
+      const url_join = `https://localhost:7080/api/game/${id_game}?playerId=${id_player}`;
+      return fetch(url_join, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+      });
+    })
+    .then(response => {
+      if(response.status == 200) {
+        console.log('Le joueur a été ajouté à la partie');
+      } else {
+        throw new Error('Erreur lors de l\'ajout du joueur à la partie');
+      }
+    })
+    .catch(error => console.error('Error:', error));
   }
-
 
   render() {
     return (
