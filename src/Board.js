@@ -14,6 +14,7 @@ class Board extends Component {
         this.hoveredTiles = [];
         this.occupiedTiles = [];
         this.z0 = 0;
+        this.isHit = false;
     }
 
     createBoard(z0) {
@@ -122,22 +123,27 @@ class Board extends Component {
 
 
     hoverEnnemyTiles(camera) {
-        // clear previous hovered tiles
-        this.hoveredTiles.forEach(tile => {
+        this.tiles.children.forEach(tile => {
+            if (tile.isHit) tile.material.color.set(0xff0000);
+        });
+        this.hoveredTiles.forEach(tileCoords => {
+            const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);
             tile.material.color.set(0x00ff00);
-        }
-        );
+        });
         this.hoveredTiles = [];
 
-        const { tileX, tileZ } = this.getPointedTile(camera);
-        if (tileX !== -1 && tileZ !== -1) {
-            const tile = this.tiles.children[tileX * BOARD_SIZE + tileZ];
-            this.hoveredTiles.push(tile);
-            this.hoveredTiles.forEach(tile => {
-                tile.material.color.set(0xff0000);
-            });
+        const indexes = this.getPointedTile(camera);
+        if (indexes.x !== -1 && indexes.z !== -1) {
+            const tile = this.tiles.children[indexes.x * BOARD_SIZE + indexes.z];
+            if (!tile.isHit) {
+                this.hoveredTiles.push(indexes);
+                this.hoveredTiles.forEach(tileCoords => {
+                    const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);
+                    tile.material.color.set(0xff0000);
+                });
+                return indexes;
+            }
         }
-        return { tileX, tileZ };
     }
 
     putShip(origin, dimensions){
@@ -151,8 +157,6 @@ class Board extends Component {
                 console.log(tile)
                 console.log((rootX + i) * BOARD_SIZE + rootZ + j);
                 tile.material.color.set(0x0000ff);
-                console.log("changed this tile");
-                console.log(tile);
             }
         }
     }

@@ -296,21 +296,59 @@ class Game extends Component {
                         console.log(ship);
                         let shipOriginIndexs = this.board.getPointedTile(this.camera);
                         if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
-                            ship.isSetup = true;
                             ship.position.x = shipOriginIndexs.x;
                             ship.position.z = shipOriginIndexs.z;
                             ship.rotation = this.player.hoverRotation;
-                            const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
-                            occupiedTiles.forEach((tileCoord) => {
-                                const tile = this.board.getTileByIndex(tileCoord);
-                                this.board.occupiedTiles.push(tile);
-                                tile.isTaken = true;
-                                tile.occupiedBy = ship.index;
-                                this.player.hoverMode = 0;
-                                ship.model.children[0].material.opacity = 1;
-                            });
+                            const x = shipOriginIndexs.x;
+                            const y = shipOriginIndexs.z;
+                            const horizontalOrientation = this.player.hoverRotation ? "true" : "false";
+                            const shipType = ship.index - 1;
+                            fetch('https://localhost:7080/api/Game/1/Ship/0?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
+                                method: 'POST'
+                            })
+                            .then(response => {
+                                if (response.status == 200){
+                                    const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
+                                    occupiedTiles.forEach((tileCoord) => {
+                                            const tile = this.board.getTileByIndex(tileCoord);
+                                            this.board.occupiedTiles.push(tile);
+                                            tile.isTaken = true;
+                                            tile.occupiedBy = ship.index;
+                                            this.player.hoverMode = 0;
+                                            ship.model.children[0].material.opacity = 1;
+                                        });
+                                        ship.isSetup = true;
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    console.log('Success:', data);
+                                })
+                                
                         }
                     });
+            }
+            else {
+                // get the tile that the player is pointing at
+                const indexes = this.ennemyBoard.getPointedTile(this.camera);
+                console.log(indexes);
+                if (indexes.x != -1 && indexes.z != -1) {
+                    const tile = this.ennemyBoard.getTileByIndex(indexes);
+                    fetch('https://localhost:7080/api/Game/1/Shoot/0?x=' + indexes.x + '&y=' + indexes.z,
+                    {
+                        method: 'POST'
+                    })
+                    .then(response => {
+                        if (response.status == 200){
+                            tile.material.color.set(0xff0000);
+                            tile.isHit = true;
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                }
             }
         };
     };
