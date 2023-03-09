@@ -48,7 +48,10 @@ function Menu() {
                 </div>
                 <div className="backend-url">
                     <p>ENTER BACKEND URL</p>
-                    <input type="text" id="backend-url" name="backend-url" value={"http://localhost:7080"} onChange={(e) => setBackendUrl(e.target.value)} />
+                    <input type="text" id="backend-url" name="backend-url" value={backendUrl} onChange={(e) => {
+                        console.log(e.target.value);
+                        setBackendUrl(e.target.value);
+                    }} />
                 </div>
             </>);
     } else if (page === 'join') {
