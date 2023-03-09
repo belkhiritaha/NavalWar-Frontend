@@ -29,7 +29,7 @@ class Game extends Component {
         playerId: this.props.playerId,
         gameId: this.props.gameId,
         errorMessage: 'No error',
-        gameState: 'Building Phase',
+        gameState: 'Waiting for players',
         turn: 'Players take turns once all ships are placed',
         endGame: false,
         API_URL: this.props.backendUrl + "/api/game/",
@@ -226,6 +226,12 @@ class Game extends Component {
                             console.log("Game Over");
                         }
 
+                        if (data.isBuildPhase){
+                            if (data.player1Id != 0 && data.player2Id != 0){
+                                this.setState({gameState: "Building Phase"});
+                            }
+                        }
+
                         if (!data.isBuildPhase){
                             this.setState({gameState: "Attacking Phase"});
                             this.player.mode = 0;
@@ -341,12 +347,6 @@ class Game extends Component {
                 shipSelection = 4;
             }
         }
-        if (event.code == 'Digit5') {
-            if (!this.player.ships[4].isSetup) {
-                this.player.tpUnsetShips(4);
-                shipSelection = 5;
-            }
-        }
         if (event.code == 'KeyR') {
             this.player.hoverRotation += 1;
             if (this.player.hoverRotation > 1) this.player.hoverRotation = 0;
@@ -381,6 +381,7 @@ class Game extends Component {
                 console.log(ship);
                 let shipOriginIndexs = this.board.getPointedTile(this.camera);
                 if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
+                    // lock ship to grid
                     ship.position.x = shipOriginIndexs.x;
                     ship.position.z = shipOriginIndexs.z;
                     ship.rotation = this.player.hoverRotation;
@@ -389,6 +390,7 @@ class Game extends Component {
                     const y = shipOriginIndexs.z;
                     const horizontalOrientation = this.player.hoverRotation ? "false" : "true";
                     const shipType = ship.index - 1;
+                    // send request to server
                     fetch(this.state.API_URL + this.props.gameId + '/ship/' + this.props.playerId + '?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
                         method: 'POST'
                     })
@@ -424,7 +426,6 @@ class Game extends Component {
             else {
                 // get the tile that the player is pointing at
                 const indexes = this.ennemyBoard.getPointedTile(this.camera);
-                console.log(indexes);
                 if (indexes.x != -1 && indexes.z != -1) {
                     const tile = this.ennemyBoard.getTileByIndex(indexes);
                     fetch(this.state.API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
@@ -471,7 +472,7 @@ class Game extends Component {
             if (this.state.winner) {
                 return (
                     <>
-                        <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>Game Over</h1>
+                        <h1 style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)' }}>Game Over</h1>
                         <h2 style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)' }}>{(this.state.winner === this.props.playerId) ? "You won!" : "You lost!"}</h2>
                         <h2 style={{ position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }}>Reload the page to play again</h2>
 
