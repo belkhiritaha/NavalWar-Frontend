@@ -15,6 +15,7 @@ function Menu() {
     const [page, setPage] = useState('menu');
     const [playerId, setPlayerId] = useState(null);
     const [gameId, setGameId] = useState(null);
+    const [backendUrl, setBackendUrl] = useState("http://localhost:7080");
 
     function returnButtonCallBack() {
         setPage('menu');
@@ -45,6 +46,10 @@ function Menu() {
                         CREATE GAME
                     </button>
                 </div>
+                <div className="backend-url">
+                    <p>ENTER BACKEND URL</p>
+                    <input type="text" id="backend-url" name="backend-url" value={"http://localhost:7080"} onChange={(e) => setBackendUrl(e.target.value)} />
+                </div>
             </>);
     } else if (page === 'join') {
         return <JoinGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} />;
@@ -53,7 +58,7 @@ function Menu() {
         return <CreateGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} />;
     }
     else if (page === 'game') {
-        return <App playerId={playerId} gameId={gameId} />;
+        return <App playerId={playerId} gameId={gameId} backendUrl={backendUrl} />;
     }
 }
 
