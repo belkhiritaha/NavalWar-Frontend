@@ -15,7 +15,7 @@ function Menu() {
     const [page, setPage] = useState('menu');
     const [playerId, setPlayerId] = useState(null);
     const [gameId, setGameId] = useState(null);
-    const [backendUrl, setBackendUrl] = useState("http://localhost:7080");
+    const [backendUrl, setBackendUrl] = useState("https://localhost:7080");
 
     function returnButtonCallBack() {
         setPage('menu');
@@ -55,10 +55,10 @@ function Menu() {
                 </div>
             </>);
     } else if (page === 'join') {
-        return <JoinGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} />;
+        return <JoinGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} backendUrl={backendUrl} />;
     }
     else if (page === 'create') {
-        return <CreateGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} />;
+        return <CreateGame returnButtonCallBack={returnButtonCallBack} playerIdCallBack={playerIdCallBack} gameIdCallBack={gameIdCallBack} backendUrl={backendUrl} />;
     }
     else if (page === 'game') {
         return <App playerId={playerId} gameId={gameId} backendUrl={backendUrl} />;

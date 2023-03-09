@@ -21,7 +21,7 @@ function JoinGame(props) {
         event.preventDefault();
         console.log("Joining game");
 
-        const url = 'https://localhost:7080/api/game/' + gameid + '?playerId=2';
+        const url = props.backendUrl + '/api/game/' + gameid + '?playerId=2';
         console.log(url)
         fetch(url, {
             method: 'PUT',

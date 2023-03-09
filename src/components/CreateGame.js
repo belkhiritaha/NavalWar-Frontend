@@ -7,7 +7,7 @@ function CreateGame(props) {
         event.preventDefault();
         const usernameInput = document.getElementById('username');
         const username = usernameInput.value;
-        const url = 'https://localhost:7080/api/game/';
+        const url = props.backendUrl + '/api/game/';
         fetch(url, {
             method: 'POST',
             headers: {
@@ -24,7 +24,7 @@ function CreateGame(props) {
             .then(response => response.text())
             .then(data => {
                 props.gameIdCallBack(data);
-                fetch('https://localhost:7080/api/game/' + data + '?playerId=1', {
+                fetch(url + data + '?playerId=1', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'

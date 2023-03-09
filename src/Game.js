@@ -32,7 +32,7 @@ class Game extends Component {
         gameState: 'Building Phase',
         turn: 'Players take turns once all ships are placed',
         endGame: false,
-        API_URL: this.props.backendUrl
+        API_URL: this.props.backendUrl + "/api/game/"
     };
 
     componentDidMount() {
@@ -49,6 +49,7 @@ class Game extends Component {
         window.addEventListener('mouseup', this.clickUpListener.bind(this));
         console.log(this.state.playerId);
         console.log(this.state.gameId);
+        console.log(this.state.API_URL);
     }
 
     componentWillUnmount() {
@@ -203,7 +204,8 @@ class Game extends Component {
 
     gameStateUpdate = () => {
         setInterval(() => {
-            fetch(this.API_URL + this.props.gameId, {
+            console.log(this.state.API_URL + this.props.gameId);
+            fetch(this.state.API_URL + this.props.gameId, {
                 method: 'GET'
             })
                 .then(async (response) => {
@@ -248,7 +250,7 @@ class Game extends Component {
                     this.setState({error: error.message});
                 });
 
-            fetch(this.API_URL + this.props.gameId + "/board?playerId=" + this.state.playerId == 1 ? 2 : 1, {
+            fetch(this.state.API_URL + this.props.gameId + "/board?playerId=" + this.state.playerId == 1 ? 2 : 1, {
                 method: 'GET'
             })
                 .then(async (response) => {
@@ -380,7 +382,7 @@ class Game extends Component {
                     const y = shipOriginIndexs.z;
                     const horizontalOrientation = this.player.hoverRotation ? "false" : "true";
                     const shipType = ship.index - 1;
-                    fetch(this.API_URL + this.props.gameId + '/ship/' + this.props.playerId + '?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
+                    fetch(this.state.API_URL + this.props.gameId + '/ship/' + this.props.playerId + '?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
                         method: 'POST'
                     })
                     .then(async response => {
@@ -418,7 +420,7 @@ class Game extends Component {
                 console.log(indexes);
                 if (indexes.x != -1 && indexes.z != -1) {
                     const tile = this.ennemyBoard.getTileByIndex(indexes);
-                    fetch(this.API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
+                    fetch(this.state.API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
                     {
                         method: 'POST'
                     })
