@@ -46,12 +46,14 @@ function Menu() {
                         CREATE GAME
                     </button>
                 </div>
-                <div className="backend-url">
-                    <p>ENTER BACKEND URL</p>
-                    <input type="text" id="backend-url" name="backend-url" value={backendUrl} onChange={(e) => {
-                        console.log(e.target.value);
-                        setBackendUrl(e.target.value);
-                    }} />
+                <div className="backend-url-container">
+                    <div className="backend-url">
+                        <h2>ENTER BACKEND URL</h2>
+                        <input type="text" id="backend-url" name="backend-url" value={backendUrl} onChange={(e) => {
+                            console.log(e.target.value);
+                            setBackendUrl(e.target.value);
+                        }} />
+                    </div>
                 </div>
             </>);
     } else if (page === 'join') {

@@ -63,6 +63,8 @@ class Board extends Component {
     hoverTiles(camera, hoverMode, hoverRotation) {
         this.tiles.children.forEach(tile => {
             if (tile.isTaken) tile.material.color.set(0x0000ff);
+            if (tile.wasShot) tile.material.color.set(0x000000);
+            if (tile.isHit) tile.material.color.set(0xff0000);
         });
         this.hoveredTiles.forEach(tileCoords => {
             const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);
@@ -122,11 +124,25 @@ class Board extends Component {
             });
     }
 
+    updateBoard(data) {
+        console.log(data);
+        const shotList = data.shots;
+        console.log(shotList);
+        shotList.forEach(shot => {
+            console.log(shot);
+            const tile = this.tiles.children.find(tile => tile.index.x === shot.x && tile.index.z === shot.y);
+            console.log(tile);
+            tile.isHit = shot.wasHit;
+            tile.wasShot = true;
+            if (tile.wasShot) tile.material.color.set(0xff0000);
+        });
+    }
+
 
     hoverEnnemyTiles(camera) {
         this.tiles.children.forEach(tile => {
-            if (tile.isHit) tile.material.color.set(0xff0000);
             if (tile.wasShot) tile.material.color.set(0x0000ff);
+            if (tile.isHit) tile.material.color.set(0xff0000);
         });
         this.hoveredTiles.forEach(tileCoords => {
             const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);

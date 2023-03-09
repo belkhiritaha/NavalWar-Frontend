@@ -32,7 +32,8 @@ class Game extends Component {
         gameState: 'Building Phase',
         turn: 'Players take turns once all ships are placed',
         endGame: false,
-        API_URL: this.props.backendUrl + "/api/game/"
+        API_URL: this.props.backendUrl + "/api/game/",
+        winner: null
     };
 
     componentDidMount() {
@@ -211,16 +212,21 @@ class Game extends Component {
                 .then(async (response) => {
                     if (response.ok){
                         const data = await response.json();
-                        if (!data.isBuildPhase){
-                            if (data.winner != 0){
-                                if (data.winner == this.state.playerId){
-                                    this.setState({turn: "You Win"});
-                                }
-                                else{
-                                    this.setState({turn: "You Lose"});
-                                }
-                                this.setState({gameState: "Game Over"});
+                        if (data.winner != 0){
+                            this.setState({winner: data.winner});
+                            console.log(data.winner);
+                            if (data.winner == this.state.playerId){
+                                console.log("You Win");
+                                this.setState({turn: "You Win"});
                             }
+                            else{
+                                this.setState({turn: "You Lose"});
+                            }
+                            this.setState({gameState: "Game Over"});
+                            console.log("Game Over");
+                        }
+
+                        if (!data.isBuildPhase){
                             this.setState({gameState: "Attacking Phase"});
                             this.player.mode = 0;
                             if (data.isPlayer1Turn){
@@ -250,16 +256,17 @@ class Game extends Component {
                     this.setState({error: error.message});
                 });
 
-            fetch(this.state.API_URL + this.props.gameId + "/board?playerId=" + this.state.playerId == 1 ? 2 : 1, {
+            fetch(this.state.API_URL + this.props.gameId + "/board?playerId=" + this.state.playerId, {
                 method: 'GET'
             })
                 .then(async (response) => {
                     if (response.ok){
                         const data = await response.json();
-                        this.ennemyBoard.update(data);
+                        console.log(data);
+                        this.board.updateBoard(data);
                     }
                     else{
-                        throw new Error("Error while fetching ennemy board");
+                        throw new Error("Error while fetching board state");
                     }
                 })
                 .catch((error) => {
@@ -461,13 +468,13 @@ class Game extends Component {
 
     render() {
         if (this.player) {
-            if (this.state.gameState === "Game Over") {
+            if (this.state.winner) {
                 return (
                     <>
-                        <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} playerId={this.props.playerId} gameId={this.props.gameId} errorMessage={this.state.errorMessage} gameState={this.state.gameState} turn={this.state.turn} />
                         <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>Game Over</h1>
+                        <h2 style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)' }}>{(this.state.winner === this.props.playerId) ? "You won!" : "You lost!"}</h2>
                         <h2 style={{ position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }}>Reload the page to play again</h2>
-                        <div style={style} ref={ref => (this.mount = ref)} />
+
                     </>
                 );
             }
