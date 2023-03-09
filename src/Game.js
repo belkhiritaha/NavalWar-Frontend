@@ -31,7 +31,8 @@ class Game extends Component {
         gameId: this.props.gameId,
         errorMessage: 'No error',
         gameState: 'Building Phase',
-        turn: 'Players take turns once all ships are placed'
+        turn: 'Players take turns once all ships are placed',
+        endGame: false
     };
 
     componentDidMount() {
@@ -209,6 +210,15 @@ class Game extends Component {
                     if (response.ok){
                         const data = await response.json();
                         if (!data.isBuildPhase){
+                            if (data.winner != 0){
+                                if (data.winner == this.state.playerId){
+                                    this.setState({turn: "You Win"});
+                                }
+                                else{
+                                    this.setState({turn: "You Lose"});
+                                }
+                                this.setState({gameState: "Game Over"});
+                            }
                             this.setState({gameState: "Attacking Phase"});
                             this.player.mode = 0;
                             if (data.isPlayer1Turn){
@@ -228,7 +238,7 @@ class Game extends Component {
                                     this.setState({turn: "Opponent Turn"});
                                 }
                             }
-                        }                        
+                        }                    
                     }
                     else{
                         throw new Error("Error while fetching game state");
@@ -392,18 +402,28 @@ class Game extends Component {
                 console.log(indexes);
                 if (indexes.x != -1 && indexes.z != -1) {
                     const tile = this.ennemyBoard.getTileByIndex(indexes);
-                    // 'https://localhost:7080/api/Game/1/Shoot/0?x=' + indexes.x + '&y=' + indexes.z,
                     fetch(API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
                     {
                         method: 'POST'
                     })
                     .then(async response => {
                         if (response.ok){
-                            tile.material.color.set(0xff0000);
-                            tile.isHit = true;
+                            const data = await response.json();
+                            const shotList = data.shots;
+                            const lastShot = shotList[shotList.length - 1];
+                            if (lastShot.hasHit) {
+                                tile.material.color.set(0xff0000);
+                                tile.isHit = true;
+                                this.setState({ errorMessage: "You hit a ship!" });
+                            }
+                            else {
+                                tile.material.color.set(0x0000ff);
+                                tile.wasShot = true;
+                                this.setState({ errorMessage: "You missed!" });
+                            }
                         }
+
                     })
-                    .then(response => response.json())
                     .then(data => {
                         console.log('Success:', data);
                     })
@@ -423,6 +443,16 @@ class Game extends Component {
 
     render() {
         if (this.player) {
+            if (this.state.gameState === "Game Over") {
+                return (
+                    <>
+                        <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} playerId={this.props.playerId} gameId={this.props.gameId} errorMessage={this.state.errorMessage} gameState={this.state.gameState} turn={this.state.turn} />
+                        <h1 style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>Game Over</h1>
+                        <h2 style={{ position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }}>Reload the page to play again</h2>
+                        <div style={style} ref={ref => (this.mount = ref)} />
+                    </>
+                );
+            }
             return (
                 <>
                     <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} playerId={this.props.playerId} gameId={this.props.gameId} errorMessage={this.state.errorMessage} gameState={this.state.gameState} turn={this.state.turn} />

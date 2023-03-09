@@ -31,6 +31,7 @@ class Board extends Component {
                 tile.index = { x: i, z: j };
                 this.tiles.add(tile);
                 tile.isOccupiedBy = -1;
+                tile.wasShot = false;
             }
         }
         this.z0 = z0;
@@ -125,6 +126,7 @@ class Board extends Component {
     hoverEnnemyTiles(camera) {
         this.tiles.children.forEach(tile => {
             if (tile.isHit) tile.material.color.set(0xff0000);
+            if (tile.wasShot) tile.material.color.set(0x0000ff);
         });
         this.hoveredTiles.forEach(tileCoords => {
             const tile = this.tiles.children.find(tile => tile.index.x === tileCoords.x && tile.index.z === tileCoords.z);

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { hoverModes } from "./Player.js";
+import { useEffect } from "react";
 
 import ListGroup from 'react-bootstrap/ListGroup';
 
@@ -45,6 +46,24 @@ function HUD(props) {
             </ListGroup>
         );
     }
+
+    function Message(props) {
+        const [isVisible, setIsVisible] = useState(true);
+      
+        useEffect(() => {
+          const timer = setTimeout(() => {
+            setIsVisible(false);
+          }, 5000);
+      
+          return () => clearTimeout(timer);
+        }, []);
+      
+        return (
+          <div className={`message ${isVisible ? 'visible' : ''}`}>
+            {props.message}
+          </div>
+        );
+      }
 
     function DashboardMenu(props) {
         return (
