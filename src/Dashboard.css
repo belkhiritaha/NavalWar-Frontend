@@ -1,0 +1,43 @@
+.dashboard-container {
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #000;
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+}
+
+.dashboard-title {
+    text-align: center;
+    margin-top: 0;
+    font-size: 36px;
+}
+
+.dashboard-info {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    margin-top: 40px;
+}
+
+.dashboard-item {
+    width: calc(33.33% - 10px);
+    background-color: #222;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.dashboard-item-title {
+    font-size: 24px;
+    margin: 0 0 10px 0;
+}
+
+.dashboard-item-value {
+    font-size: 18px;
+    margin: 0;
+    text-align: center;
+}

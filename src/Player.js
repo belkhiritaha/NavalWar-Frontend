@@ -22,8 +22,8 @@ const hoverAreas = [
 const hoverRotationDirections = [
     { x: 1, y: 1 },
     { x: 1, y: 1 },
-    { x: -1, y: 1 },
-    { x: -1, y: -1 }
+    // { x: -1, y: 1 },
+    // { x: -1, y: -1 }
 ];
 
 const modes = {

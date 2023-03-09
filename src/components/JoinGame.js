@@ -18,7 +18,7 @@ function JoinGame(props) {
     }
 
     function joinGame(event) {
-        setIsGameStarted(true);
+        event.preventDefault();
         console.log("Joining game");
 
         const url = 'https://localhost:7080/api/game/' + gameid + '?playerId=2';
@@ -31,31 +31,19 @@ function JoinGame(props) {
         })
             .then(async response => {
                 if (response.ok) {
-                    return response;
+                    props.gameIdCallBack(gameid);
+                    props.playerIdCallBack(2);
                 }
-                const message = await response.text();
-                throw new Error(message);
-            })
-            .catch(error => {
-                alert(error);
-                // dont execute the rest of the function
-                return Promise.reject(error);})
-            .then(async response => {
-                const data = await response.text();
-                props.gameIdCallBack(data);
-                props.playerIdCallBack(2);
+                else {
+                    const message = await response.text();
+                    throw new Error(message);
+                }
             })
             .catch(error => {
                 alert(error);
             });  
     }
 
-
-    if (isGameStarted) {
-        return (
-            <Container />
-        );
-    }
     return (
         <React.StrictMode>
             <div>

@@ -22,10 +22,16 @@ const style = {
 
 const STEPS_PER_FRAME = 5;
 
+const API_URL = "https://localhost:7080/api/game/";
 
 class Game extends Component {
     state = {
-        hoverMode: 0
+        hoverMode: 0,
+        playerId: this.props.playerId,
+        gameId: this.props.gameId,
+        errorMessage: 'No error',
+        gameState: 'Building Phase',
+        turn: 'Players take turns once all ships are placed'
     };
 
     componentDidMount() {
@@ -33,12 +39,15 @@ class Game extends Component {
         this.addLights();
         this.loadModels();
         this.startAnimationLoop();
+        this.gameStateUpdate();
         window.addEventListener('resize', this.handleWindowResize);
         window.addEventListener('keydown', this.keyDownListener);
         window.addEventListener('keyup', this.keyUpListener);
         window.addEventListener('mousemove', this.mouseMoveListener);
         window.addEventListener('mousedown', this.clickDownListener);
         window.addEventListener('mouseup', this.clickUpListener.bind(this));
+        console.log(this.state.playerId);
+        console.log(this.state.gameId);
     }
 
     componentWillUnmount() {
@@ -53,6 +62,8 @@ class Game extends Component {
         this.camera = new Camera();
         this.camera.camera.rotation.order = 'YXZ';
         this.player = new Player({ camera: this.camera.camera });
+        this.setState({ errorMessage: "No error"});
+        console.log(this.state.errorMessage);
         this.setState({ hoverMode: this.player.hoverMode });
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
@@ -189,6 +200,46 @@ class Game extends Component {
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
 
+    gameStateUpdate = () => {
+        setInterval(() => {
+            fetch(API_URL + this.props.gameId, {
+                method: 'GET'
+            })
+                .then(async (response) => {
+                    if (response.ok){
+                        const data = await response.json();
+                        if (!data.isBuildPhase){
+                            this.setState({gameState: "Attacking Phase"});
+                            this.player.mode = 0;
+                            if (data.isPlayer1Turn){
+                                if (this.state.playerId == 1){
+                                    this.setState({turn: "Your Turn"});
+
+                                }
+                                else{
+                                    this.setState({turn: "Opponent Turn"});
+                                }
+                            }
+                            else {
+                                if (this.state.playerId == 2){
+                                    this.setState({turn: "Your Turn"});
+                                }
+                                else{
+                                    this.setState({turn: "Opponent Turn"});
+                                }
+                            }
+                        }                        
+                    }
+                    else{
+                        throw new Error("Error while fetching game state");
+                    }
+                })
+                .catch((error) => {
+                    this.setState({error: error.message});
+                });
+            }, 5000);
+    };
+
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
@@ -263,7 +314,7 @@ class Game extends Component {
         }
         if (event.code == 'KeyR') {
             this.player.hoverRotation += 1;
-            if (this.player.hoverRotation > 3) this.player.hoverRotation = 0;
+            if (this.player.hoverRotation > 1) this.player.hoverRotation = 0;
         }
         if (event.code == 'KeyF') {
             this.player.mode = 1 - this.player.mode;
@@ -291,42 +342,49 @@ class Game extends Component {
     clickUpListener() {
         if (document.pointerLockElement !== null) {
             if (this.player.mode == 1) {
-                this.player.ships.filter(ship => ship.index == this.player.hoverMode)
-                    .forEach((ship) => {
-                        console.log(ship);
-                        let shipOriginIndexs = this.board.getPointedTile(this.camera);
-                        if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
-                            ship.position.x = shipOriginIndexs.x;
-                            ship.position.z = shipOriginIndexs.z;
-                            ship.rotation = this.player.hoverRotation;
-                            const x = shipOriginIndexs.x;
-                            const y = shipOriginIndexs.z;
-                            const horizontalOrientation = this.player.hoverRotation ? "true" : "false";
-                            const shipType = ship.index - 1;
-                            fetch('https://localhost:7080/api/Game/1/Ship/0?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
-                                method: 'POST'
-                            })
-                            .then(response => {
-                                if (response.status == 200){
-                                    const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
-                                    occupiedTiles.forEach((tileCoord) => {
-                                            const tile = this.board.getTileByIndex(tileCoord);
-                                            this.board.occupiedTiles.push(tile);
-                                            tile.isTaken = true;
-                                            tile.occupiedBy = ship.index;
-                                            this.player.hoverMode = 0;
-                                            ship.model.children[0].material.opacity = 1;
-                                        });
-                                        ship.isSetup = true;
-                                    }
-                                })
-                                .then(response => response.json())
-                                .then(data => {
-                                    console.log('Success:', data);
-                                })
-                                
+                const ship = this.player.ships[this.player.hoverMode - 1];
+                console.log(ship);
+                let shipOriginIndexs = this.board.getPointedTile(this.camera);
+                if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
+                    ship.position.x = shipOriginIndexs.x;
+                    ship.position.z = shipOriginIndexs.z;
+                    ship.rotation = this.player.hoverRotation;
+                    ship.isSetup = true;
+                    const x = shipOriginIndexs.x;
+                    const y = shipOriginIndexs.z;
+                    const horizontalOrientation = this.player.hoverRotation ? "false" : "true";
+                    const shipType = ship.index - 1;
+                    fetch(API_URL + this.props.gameId + '/ship/' + this.props.playerId + '?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
+                        method: 'POST'
+                    })
+                    .then(async response => {
+                        if (response.ok){
+                            const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
+                            occupiedTiles.forEach((tileCoord) => {
+                                    const tile = this.board.getTileByIndex(tileCoord);
+                                    this.board.occupiedTiles.push(tile);
+                                    tile.isTaken = true;
+                                    tile.occupiedBy = ship.index;
+                                    this.player.hoverMode = 0;
+                                    ship.model.children[0].material.opacity = 1;
+                                });
+                                ship.isSetup = true;
+                                this.setState({ errorMessage: "No error" });
                         }
-                    });
+                        else {
+                            const message = await response.text();
+                            ship.isSetup = false;
+                            throw new Error(message);
+                        }
+                    })
+                        .catch((error) => {
+                            // set error
+                            this.setState({ errorMessage: error.message });
+                            console.error('Error:', this.state.errorMessage);
+                        });
+                        
+                }
+
             }
             else {
                 // get the tile that the player is pointing at
@@ -334,12 +392,13 @@ class Game extends Component {
                 console.log(indexes);
                 if (indexes.x != -1 && indexes.z != -1) {
                     const tile = this.ennemyBoard.getTileByIndex(indexes);
-                    fetch('https://localhost:7080/api/Game/1/Shoot/0?x=' + indexes.x + '&y=' + indexes.z,
+                    // 'https://localhost:7080/api/Game/1/Shoot/0?x=' + indexes.x + '&y=' + indexes.z,
+                    fetch(API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
                     {
                         method: 'POST'
                     })
-                    .then(response => {
-                        if (response.status == 200){
+                    .then(async response => {
+                        if (response.ok){
                             tile.material.color.set(0xff0000);
                             tile.isHit = true;
                         }
@@ -366,7 +425,7 @@ class Game extends Component {
         if (this.player) {
             return (
                 <>
-                    <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} />
+                    <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} playerId={this.props.playerId} gameId={this.props.gameId} errorMessage={this.state.errorMessage} gameState={this.state.gameState} turn={this.state.turn} />
                     <div style={style} ref={ref => (this.mount = ref)} />
                 </>
             );
@@ -374,7 +433,9 @@ class Game extends Component {
         else {
             return (
                 <>
-                    <HUD hoverMode={0} ships={[]} />
+                    <HUD hoverMode={0} ships={[]} playerId={this.props.playerId} gameId={this.props.gameId} />
+                    {/* <Dashboard playerId={this.props.playerId} gameId={this.props.gameId} /> */}
+
                     <div style={style} ref={ref => (this.mount = ref)} />
                 </>
             );
