@@ -6,8 +6,7 @@ const hoverModes = {
     MicroRecon: 1,
     Warship: 2,
     GalactixRacer: 3,
-    RedFighter: 4,
-    DualStriker: 5
+    RedFighter: 4
 }
 
 const hoverAreas = [
@@ -15,15 +14,14 @@ const hoverAreas = [
     { x: 2, y: 1 },
     { x: 3, y: 2 },
     { x: 3, y: 1 },
-    { x: 4, y: 2 },
-    { x: 5, y: 3 }
+    { x: 4, y: 2 }
 ];
 
 const hoverRotationDirections = [
     { x: 1, y: 1 },
     { x: 1, y: 1 },
-    { x: -1, y: 1 },
-    { x: -1, y: -1 }
+    // { x: -1, y: 1 },
+    // { x: -1, y: -1 }
 ];
 
 const modes = {

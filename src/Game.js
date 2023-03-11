@@ -25,7 +25,15 @@ const STEPS_PER_FRAME = 5;
 
 class Game extends Component {
     state = {
-        hoverMode: 0
+        hoverMode: 0,
+        playerId: this.props.playerId,
+        gameId: this.props.gameId,
+        errorMessage: 'No error',
+        gameState: 'Waiting for players',
+        turn: 'Players take turns once all ships are placed',
+        endGame: false,
+        API_URL: this.props.backendUrl + "/api/game/",
+        winner: null
     };
 
     componentDidMount() {
@@ -33,12 +41,16 @@ class Game extends Component {
         this.addLights();
         this.loadModels();
         this.startAnimationLoop();
+        this.gameStateUpdate();
         window.addEventListener('resize', this.handleWindowResize);
         window.addEventListener('keydown', this.keyDownListener);
         window.addEventListener('keyup', this.keyUpListener);
         window.addEventListener('mousemove', this.mouseMoveListener);
         window.addEventListener('mousedown', this.clickDownListener);
         window.addEventListener('mouseup', this.clickUpListener.bind(this));
+        console.log(this.state.playerId);
+        console.log(this.state.gameId);
+        console.log(this.state.API_URL);
     }
 
     componentWillUnmount() {
@@ -53,6 +65,8 @@ class Game extends Component {
         this.camera = new Camera();
         this.camera.camera.rotation.order = 'YXZ';
         this.player = new Player({ camera: this.camera.camera });
+        this.setState({ errorMessage: "No error"});
+        console.log(this.state.errorMessage);
         this.setState({ hoverMode: this.player.hoverMode });
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
@@ -189,6 +203,84 @@ class Game extends Component {
         this.requestID = window.requestAnimationFrame(this.startAnimationLoop);
     };
 
+    gameStateUpdate = () => {
+        setInterval(() => {
+            console.log(this.state.API_URL + this.props.gameId);
+            fetch(this.state.API_URL + this.props.gameId, {
+                method: 'GET'
+            })
+                .then(async (response) => {
+                    if (response.ok){
+                        const data = await response.json();
+                        if (data.winner != 0){
+                            this.setState({winner: data.winner});
+                            console.log(data.winner);
+                            if (data.winner == this.state.playerId){
+                                console.log("You Win");
+                                this.setState({turn: "You Win"});
+                            }
+                            else{
+                                this.setState({turn: "You Lose"});
+                            }
+                            this.setState({gameState: "Game Over"});
+                            console.log("Game Over");
+                        }
+
+                        if (data.isBuildPhase){
+                            if (data.player1Id != 0 && data.player2Id != 0){
+                                this.setState({gameState: "Building Phase"});
+                            }
+                        }
+
+                        if (!data.isBuildPhase){
+                            this.setState({gameState: "Attacking Phase"});
+                            this.player.mode = 0;
+                            if (data.isPlayer1Turn){
+                                if (this.state.playerId == 1){
+                                    this.setState({turn: "Your Turn"});
+
+                                }
+                                else{
+                                    this.setState({turn: "Opponent Turn"});
+                                }
+                            }
+                            else {
+                                if (this.state.playerId == 2){
+                                    this.setState({turn: "Your Turn"});
+                                }
+                                else{
+                                    this.setState({turn: "Opponent Turn"});
+                                }
+                            }
+                        }                    
+                    }
+                    else{
+                        throw new Error("Error while fetching game state");
+                    }
+                })
+                .catch((error) => {
+                    this.setState({error: error.message});
+                });
+
+            fetch(this.state.API_URL + this.props.gameId + "/board?playerId=" + this.state.playerId, {
+                method: 'GET'
+            })
+                .then(async (response) => {
+                    if (response.ok){
+                        const data = await response.json();
+                        console.log(data);
+                        this.board.updateBoard(data);
+                    }
+                    else{
+                        throw new Error("Error while fetching board state");
+                    }
+                })
+                .catch((error) => {
+                    this.setState({error: error.message});
+                });
+            }, 5000);
+    };
+
     handleWindowResize = () => {
         const width = this.mount.clientWidth;
         const height = this.mount.clientHeight;
@@ -255,15 +347,9 @@ class Game extends Component {
                 shipSelection = 4;
             }
         }
-        if (event.code == 'Digit5') {
-            if (!this.player.ships[4].isSetup) {
-                this.player.tpUnsetShips(4);
-                shipSelection = 5;
-            }
-        }
         if (event.code == 'KeyR') {
             this.player.hoverRotation += 1;
-            if (this.player.hoverRotation > 3) this.player.hoverRotation = 0;
+            if (this.player.hoverRotation > 1) this.player.hoverRotation = 0;
         }
         if (event.code == 'KeyF') {
             this.player.mode = 1 - this.player.mode;
@@ -291,26 +377,83 @@ class Game extends Component {
     clickUpListener() {
         if (document.pointerLockElement !== null) {
             if (this.player.mode == 1) {
-                this.player.ships.filter(ship => ship.index == this.player.hoverMode)
-                    .forEach((ship) => {
-                        console.log(ship);
-                        let shipOriginIndexs = this.board.getPointedTile(this.camera);
-                        if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
-                            ship.isSetup = true;
-                            ship.position.x = shipOriginIndexs.x;
-                            ship.position.z = shipOriginIndexs.z;
-                            ship.rotation = this.player.hoverRotation;
+                const ship = this.player.ships[this.player.hoverMode - 1];
+                console.log(ship);
+                let shipOriginIndexs = this.board.getPointedTile(this.camera);
+                if (shipOriginIndexs.x != -1 && shipOriginIndexs.z != -1) {
+                    // lock ship to grid
+                    ship.position.x = shipOriginIndexs.x;
+                    ship.position.z = shipOriginIndexs.z;
+                    ship.rotation = this.player.hoverRotation;
+                    ship.isSetup = true;
+                    const x = shipOriginIndexs.x;
+                    const y = shipOriginIndexs.z;
+                    const horizontalOrientation = this.player.hoverRotation ? "false" : "true";
+                    const shipType = ship.index - 1;
+                    // send request to server
+                    fetch(this.state.API_URL + this.props.gameId + '/ship/' + this.props.playerId + '?x=' + x + '&y=' + y + '&horizontalOrientation=' + horizontalOrientation + '&shipType=' + shipType, {
+                        method: 'POST'
+                    })
+                    .then(async response => {
+                        if (response.ok){
                             const occupiedTiles = this.board.getShipTiles(shipOriginIndexs, ship.dimensions, this.player.hoverRotation);
                             occupiedTiles.forEach((tileCoord) => {
-                                const tile = this.board.getTileByIndex(tileCoord);
-                                this.board.occupiedTiles.push(tile);
-                                tile.isTaken = true;
-                                tile.occupiedBy = ship.index;
-                                this.player.hoverMode = 0;
-                                ship.model.children[0].material.opacity = 1;
-                            });
+                                    const tile = this.board.getTileByIndex(tileCoord);
+                                    this.board.occupiedTiles.push(tile);
+                                    tile.isTaken = true;
+                                    tile.occupiedBy = ship.index;
+                                    this.player.hoverMode = 0;
+                                    ship.model.children[0].material.opacity = 1;
+                                });
+                                ship.isSetup = true;
+                                this.setState({ errorMessage: "No error" });
                         }
-                    });
+                        else {
+                            const message = await response.text();
+                            ship.isSetup = false;
+                            throw new Error(message);
+                        }
+                    })
+                        .catch((error) => {
+                            // set error
+                            this.setState({ errorMessage: error.message });
+                            console.error('Error:', this.state.errorMessage);
+                        });
+                        
+                }
+
+            }
+            else {
+                // get the tile that the player is pointing at
+                const indexes = this.ennemyBoard.getPointedTile(this.camera);
+                if (indexes.x != -1 && indexes.z != -1) {
+                    const tile = this.ennemyBoard.getTileByIndex(indexes);
+                    fetch(this.state.API_URL + this.props.gameId + '/shoot/' + this.props.playerId + '?x=' + indexes.x + '&y=' + indexes.z,
+                    {
+                        method: 'POST'
+                    })
+                    .then(async response => {
+                        if (response.ok){
+                            const data = await response.json();
+                            const shotList = data.shots;
+                            const lastShot = shotList[shotList.length - 1];
+                            if (lastShot.hasHit) {
+                                tile.material.color.set(0xff0000);
+                                tile.isHit = true;
+                                this.setState({ errorMessage: "You hit a ship!" });
+                            }
+                            else {
+                                tile.material.color.set(0x0000ff);
+                                tile.wasShot = true;
+                                this.setState({ errorMessage: "You missed!" });
+                            }
+                        }
+
+                    })
+                    .then(data => {
+                        console.log('Success:', data);
+                    })
+                }
             }
         };
     };
@@ -326,9 +469,19 @@ class Game extends Component {
 
     render() {
         if (this.player) {
+            if (this.state.winner) {
+                return (
+                    <>
+                        <h1 style={{ position: 'absolute', top: '30%', left: '50%', transform: 'translate(-50%, -50%)' }}>Game Over</h1>
+                        <h2 style={{ position: 'absolute', top: '70%', left: '50%', transform: 'translate(-50%, -50%)' }}>{(this.state.winner === this.props.playerId) ? "You won!" : "You lost!"}</h2>
+                        <h2 style={{ position: 'absolute', top: '60%', left: '50%', transform: 'translate(-50%, -50%)' }}>Reload the page to play again</h2>
+
+                    </>
+                );
+            }
             return (
                 <>
-                    <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} />
+                    <HUD hoverMode={this.player.hoverMode} ships={this.player.ships} playerId={this.props.playerId} gameId={this.props.gameId} errorMessage={this.state.errorMessage} gameState={this.state.gameState} turn={this.state.turn} />
                     <div style={style} ref={ref => (this.mount = ref)} />
                 </>
             );
@@ -336,7 +489,9 @@ class Game extends Component {
         else {
             return (
                 <>
-                    <HUD hoverMode={0} ships={[]} />
+                    <HUD hoverMode={0} ships={[]} playerId={this.props.playerId} gameId={this.props.gameId} />
+                    {/* <Dashboard playerId={this.props.playerId} gameId={this.props.gameId} /> */}
+
                     <div style={style} ref={ref => (this.mount = ref)} />
                 </>
             );

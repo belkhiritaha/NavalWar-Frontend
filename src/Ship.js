@@ -31,9 +31,7 @@ class Ship extends Component {
             object.scale.set(modelSettings.scale[0], modelSettings.scale[1], modelSettings.scale[2]);
             object.position.set(modelSettings.offset[hoverRotation][0] * TILE_SIZE, modelSettings.offset[hoverRotation][1] * TILE_SIZE, modelSettings.offset[hoverRotation][2] * TILE_SIZE);
             object.rotation.set(modelSettings.rotation[0], modelSettings.rotation[1], modelSettings.rotation[2]);
-            console.log(modelSettings.offset[hoverRotation][2])
             modelsList.add(object);
-            console.log(modelsList)
             this.model = object;
         },
         (xhr) => {
@@ -57,7 +55,6 @@ class Ship extends Component {
     getOccupiedTiles() {
         let tiles = [];
         let originTile = {x: this.position.x, z: this.position.z};
-        console.log(originTile, this.dimensions)
         let tileX;
         let tileZ;
         for (let i = 0; i < this.dimensions.x; i++) {
